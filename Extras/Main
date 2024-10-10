@@ -1,0 +1,33 @@
+
+local Services = setmetatable({}, {__index = function(Self, Idx) return game:GetService(Idx) end})
+local script = {
+    Functions = {},
+    ModuleScripts = {},
+    LocalScripts = {},
+    Player = Services.Players.LocalPlayer
+}
+
+function script:GetHumanoid()
+    return script.Player and script.Player.Character and script.Player.Character:FindFirstChildWhichIsA("Humanoid")
+end
+function script:WalkSpeed(Speed)
+    sethiddenproperty(script:GetHumanoid(), "WalkSpeed", Speed)
+end
+function script:JumPower(Power)
+    sethiddenproperty(script:GetHumanoid(), "JumpPower", Power)
+end
+function script:EditHumanoid()
+    local OldNameCall = nil
+    OldNameCall = hookmetamethod(game, "__namecall", function(A, B, C)
+        local Self = ...
+        local Args = {...}
+        if A  and A.ClassName == "Humanoid" and B == "WalkSpeed" and C then
+            return script.GetHumanoid().WalkSpeed
+        end
+        if A and A.ClassName == "Humanoid" and B == "JumpPower" and C then
+            return script.GetHumanoid().JumpPower
+        end
+        return OldNameCall(A, B, C)
+    end)
+end
+return script
