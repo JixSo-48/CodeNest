@@ -1,5 +1,5 @@
 
-math.randomseed(tick())
+math.randomseed(tick()) 
 local Services = setmetatable({}, {__index = function(Self, Index)
 	return game:GetService(Index)
 end})
