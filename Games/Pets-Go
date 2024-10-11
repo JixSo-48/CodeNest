@@ -1,5 +1,5 @@
 
-math.randomseed(tick()) 
+math.randomseed(tick())
 local Services = setmetatable({}, {__index = function(Self, Index)
 	return game:GetService(Index)
 end})
@@ -12,8 +12,8 @@ local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
 local Client = {
 	Break = Workspace.__THINGS.Breakables,
-	Orbs = workspace.__THINGS.Orbs,
-	Digsites = workspace.__THINGS.Digging,
+	Orbs = Workspace.__THINGS.Orbs,
+	Digsites = Workspace.__THINGS.Digging,
 }
 for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
 	Client[v.Name] = require(v)
@@ -50,12 +50,18 @@ Client.Collect = function()
             v:Destroy()
         end
     end
-   	game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("Orbs: Collect"):FireServer(MyOrbs)
+   	ReplicatedStorage:WaitForChild("Network"):WaitForChild("Orbs: Collect"):FireServer(MyOrbs)
 end
 
 Client.Dig = function()
-	for i,v in next, Client.Digsites:GetChildren() do
-		Client.DiggingCmds.Target(tonumber(v.Name), v.Name)
+	local Pets = {}
+	for i,v in next, Client.PlayerPet.GetAll() do
+		if tostring(v.owner) == Player.Name then
+			for i2,v2 in next, getupvalue(Client.DiggingCmds.Target, 1) do
+				ReplicatedStorage:WaitForChild("Network"):WaitForChild("Digging_Target"):InvokeServer(tonumber(v2.uid), tostring(v.euid))
+				ReplicatedStorage:WaitForChild("Network"):WaitForChild("Digging_Claim"):InvokeServer(tonumber(v2.uid))
+			end
+		end
 	end
 end
 
