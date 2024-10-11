@@ -39,7 +39,13 @@ Client.Nearest = function()
 	end
 	return Target
 end
-
+Client.Fruit = function()
+    for i,v in next, Client.Save.GetSaves()[Player].Inventory.Fruit do
+        if Client.FruitCmds.GetMaxConsume(i) ~= 0 then
+            Client.FruitCmds.Consume(i, 1)
+        end
+    end
+end
 Client.Collect = function()
     local FuckYou = Client.Orbs:GetChildren()
     local MyOrbs = {}
@@ -64,6 +70,16 @@ Client.Dig = function()
 		end
 	end
 end
+Client.Potion = function()
+    for i,v in next, Client.Save.GetSaves()[Player].Inventory.Potion do
+        Client.PotionCmds.Consume(i)
+    end
+end
+
+Client.Roll = function()
+	ReplicatedStorage:WaitForChild("Network"):WaitForChild("Eggs_Roll"):InvokeServer()
+end
+
 
 Client.Upgrade = function()
 	for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
@@ -89,6 +105,12 @@ spawn(function()
 end)
 spawn(function()
 	while wait() do
+		if Roll then
+			Client.Roll()
+		end
+		if Potion then
+			Client.Potion()
+		end
 		if Dig then
 			Client.Dig()
 		end
@@ -97,6 +119,9 @@ spawn(function()
 		end
 		if Breakables then
 			Client.settarget(Client.Nearest())
+		end
+		if Fruit then
+			Client.Fruit()
 		end
 	end
 end)
@@ -121,6 +146,33 @@ local Misc = Basic:CreateSection("Features")
 
 local hello = UI:CreatePage("Destroy UI")
 local Nig = hello:CreateSection("Destroy")
+
+Misc:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false;
+	Callback = function(Value)
+		Roll = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Eat Fruits"; Flag = "asdfsdfdsf"; Default = false;
+	Callback = function(Value)
+		Fruit = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Use Potions"; Flag = "asdfshgfhdfdsf"; Default = false;
+	Callback = function(Value)
+		Potion = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
 
 Misc:CreateToggle({Name = "Auto Dig"; Flag = "a"; Default = false;
 	Callback = function(Value)
