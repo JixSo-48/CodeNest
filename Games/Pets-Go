@@ -96,7 +96,7 @@ end)
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
     Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
-    ConfigFolder = "Jailbreak";
+    ConfigFolder = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
     Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
     Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
     Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
@@ -104,7 +104,7 @@ local UI = Atlas.new({
     UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
     FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
     CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
-        return inputtedKey=="key1234"
+        return true
     end;
     Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
 })
