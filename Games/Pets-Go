@@ -1,6 +1,8 @@
 
 math.randomseed(tick())
-local Services = setmetatable({}, {__index = function(Self, Idx) return game:GetService(Idx) end})
+local Services = setmetatable({}, {__index = function(Self, Index)
+	return game:GetService(Index)
+end})
 local ReplicatedStorage = Services.ReplicatedStorage
 local Players = Services.Players
 local RunService = Services.RunService
