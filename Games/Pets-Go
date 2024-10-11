@@ -1,0 +1,168 @@
+
+math.randomseed(tick())
+local Services = setmetatable({}, {__index = function(Self, Idx) return game:GetService(Idx) end})
+local ReplicatedStorage = Services.ReplicatedStorage
+local Players = Services.Players
+local RunService = Services.RunService
+local Workspace = Services.Workspace
+local CoreGui = Services.CoreGui
+local Camera = Workspace.CurrentCamera
+local Player = Players.LocalPlayer
+local Client = {
+	Break = Workspace.__THINGS.Breakables,
+	Orbs = workspace.__THINGS.Orbs,
+	Digsites = workspace.__THINGS.Digging,
+}
+for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
+	Client[v.Name] = require(v)
+end
+Client.settarget = function(Coin)
+	for i,v in next, Client.PlayerPet.GetAll() do
+		if tostring(v.owner) == Player.Name then
+			Client.PlayerPet.SetTarget(v, Coin)
+		end
+	end
+end
+Client.Nearest = function()
+	local Target, MaxDistance = nil, math.huge
+	for i,v in next, Client.Break:GetChildren() do
+		local click = v:FindFirstChild("ClickDetector", true)
+		if v:IsA("Model") then
+			local Distance = (v:GetModelCFrame().Position - Player.Character.HumanoidRootPart.Position).magnitude
+			if Distance <= MaxDistance then
+				MaxDistance = Distance
+				Target = v
+			end
+		end
+	end
+	return Target
+end
+
+Client.Collect = function()
+    local FuckYou = Client.Orbs:GetChildren()
+    local MyOrbs = {}
+
+    if #FuckYou > 10 then
+        for i,v in next, FuckYou do
+            MyOrbs[i] = tonumber(v.Name)
+            v:Destroy()
+        end
+    end
+   	game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("Orbs: Collect"):FireServer(MyOrbs)
+end
+
+Client.Dig = function()
+	for i,v in next, Client.Digsites:GetChildren() do
+		Client.DiggingCmds.Target(tonumber(v.Name), v.Name)
+	end
+end
+
+Client.Upgrade = function()
+	for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
+		if not Client.UpgradeCmds.IsUnlocked(i) then
+			Client.UpgradeCmds.Unlock(i)
+		end
+	end
+end
+local Speed = Client.PlayerPet.CalculateSpeedMultiplier
+Client.PlayerPet.CalculateSpeedMultiplier = function(...)
+	if not Speedy then
+		return Speed(...)
+	else
+		return math.huge
+	end
+end
+spawn(function()
+	while wait() do
+		if Upgrade then
+			Client.Upgrade()
+		end
+	end
+end)
+spawn(function()
+	while wait() do
+		if Dig then
+			Client.Dig()
+		end
+		if Collect then
+			Client.Collect()
+		end
+		if Breakables then
+			Client.settarget(Client.Nearest())
+		end
+	end
+end)
+
+local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
+local UI = Atlas.new({
+    Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    ConfigFolder = "Jailbreak";
+    Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
+    Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
+    Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
+    -- Atlas Loader:
+    UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
+    FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
+    CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
+        return inputtedKey=="key1234"
+    end;
+    Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
+})
+local Basic = UI:CreatePage("AutoFarm")
+local Misc = Basic:CreateSection("Features")
+
+local hello = UI:CreatePage("Destroy UI")
+local Nig = hello:CreateSection("Destroy")
+
+Misc:CreateToggle({Name = "Auto Dig"; Flag = "a"; Default = false;
+	Callback = function(Value)
+		Dig = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Breakables"; Flag = "ab"; Default = false;
+	Callback = function(Value)
+		Breakables = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Collect"; Flag = "abc"; Default = false;
+	Callback = function(Value)
+		Collect = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Upgrade"; Flag = "abcd"; Default = false;
+	Callback = function(Value)
+		Upgrade = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Pet Infinite Speed"; Flag = "abcde"; Default = false;
+	Callback = function(Value)
+		Speedy = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+
+Nig:CreateButton({
+	Name = "Destroy?"; -- required: name of element
+	Callback = function()  -- required: function to be called when button is pressed
+		UI:Destroy()
+	end
+})
