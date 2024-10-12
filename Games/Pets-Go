@@ -1,4 +1,3 @@
-
 math.randomseed(tick())
 local Services = setmetatable({}, {__index = function(Self, Index)
 	return game:GetService(Index)
@@ -14,9 +13,25 @@ local Client = {
 	Break = Workspace.__THINGS.Breakables,
 	Orbs = Workspace.__THINGS.Orbs,
 	Digsites = Workspace.__THINGS.Digging,
+	Gifts = getsenv(Player.PlayerScripts.Scripts.Game["Hidden Gifts"]),
+	Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
 }
 for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
 	Client[v.Name] = require(v)
+end
+for i,v in next, getgc() do
+	if type(v) == "function" and islclosure(v) then
+		if getinfo(v).name == "requestRelics" then
+			Client.requestRelics = v
+		elseif getinfo(v).name == "relicClicked" then
+			Client.relicClicked = v
+		end
+	end
+end
+Client.CollectRelics = function()
+	for i,v in next, getupvalue(Client.requestRelics, 1) do
+		Client.relicClicked(v)
+	end
 end
 
 Client.settarget = function(Coin)
@@ -26,11 +41,17 @@ Client.settarget = function(Coin)
 		end
 	end
 end
+
+Client.CollectGift = function()
+	for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
+		Client.Gifts.attemptClaim(v)
+	end
+end
 Client.Nearest = function()
 	local Target, MaxDistance = nil, math.huge
 	for i,v in next, Client.Break:GetChildren() do
 		local click = v:FindFirstChild("ClickDetector", true)
-		if v:IsA("Model") then
+		if v:IsA("Model") and v:FindFirstChildWhichIsA("BasePart") then
 			local Distance = (v:GetModelCFrame().Position - Player.Character.HumanoidRootPart.Position).magnitude
 			if Distance <= MaxDistance then
 				MaxDistance = Distance
@@ -56,8 +77,8 @@ Client.Collect = function()
             MyOrbs[i] = tonumber(v.Name)
             v:Destroy()
         end
+		ReplicatedStorage:WaitForChild("Network"):WaitForChild("Orbs: Collect"):FireServer(MyOrbs)
     end
-   	ReplicatedStorage:WaitForChild("Network"):WaitForChild("Orbs: Collect"):FireServer(MyOrbs)
 end
 
 Client.Dig = function()
@@ -72,15 +93,26 @@ Client.Dig = function()
 	end
 end
 Client.Potion = function()
-    for i,v in next, Client.Save.GetSaves()[Player].Inventory.Consumable do
-		ReplicatedStorage:WaitForChild("Network"):WaitForChild("Consumables_Consume"):InvokeServer(i, 1)
-    end
+	if Client.Save.GetSaves()[Player].Inventory.Consumable then
+		for i,v in next, Client.Save.GetSaves()[Player].Inventory.Consumable do
+			ReplicatedStorage:WaitForChild("Network"):WaitForChild("Consumables_Consume"):InvokeServer(i, 1)
+		end
+	end
 end
 
 Client.Roll = function()
 	ReplicatedStorage:WaitForChild("Network"):WaitForChild("Eggs_Roll"):InvokeServer()
 end
 
+Client.Relics = function()
+    if v then
+        for i,v in next, getupvalue(getsenv(Player.PlayerScripts.Scripts.Game.Relics).RequestRelics,1) do
+            if v.Model == v then
+                return v
+            end
+        end
+    end
+end
 
 Client.Upgrade = function()
 	for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
@@ -124,6 +156,12 @@ spawn(function()
 		if Fruit then
 			Client.Fruit()
 		end
+		if Gifts then
+			Client.CollectGift()
+		end
+		if Relics then
+			Client.CollectRelics()
+		end
 	end
 end)
 
@@ -151,6 +189,15 @@ local Nig = hello:CreateSection("Destroy")
 Misc:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Roll = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default = false;
+	Callback = function(Value)
+		Gifts = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
@@ -220,6 +267,14 @@ Misc:CreateToggle({Name = "Pet Infinite Speed"; Flag = "abcde"; Default = false;
     CallbackOnCreation = true;
 })
 
+Misc:CreateToggle({Name = "Auto Relics"; Flag = "abcdfsdfsdfe"; Default = false;
+	Callback = function(Value)
+		Relics = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
 
 Nig:CreateButton({
 	Name = "Destroy?"; -- required: name of element
