@@ -28,6 +28,14 @@ for i,v in next, getgc() do
 		end
 	end
 end
+
+Client.AntiAFK = function()
+	if Player.Idled then
+		for i,v in next, getconnections(Player.Idled) do
+			v:Disable()
+		end
+	end
+end
 Client.CollectRelics = function()
 	for i,v in next, getupvalue(Client.requestRelics, 1) do
 		Client.relicClicked(v)
@@ -164,7 +172,7 @@ spawn(function()
 		end
 	end
 end)
-
+Client.AntiAFK()
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
     Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
