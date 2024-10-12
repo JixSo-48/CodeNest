@@ -41,15 +41,6 @@ Client.CollectRelics = function()
 		Client.relicClicked(v)
 	end
 end
-
-Client.settarget = function(Coin)
-	for i,v in next, Client.PlayerPet.GetAll() do
-		if tostring(v.owner) == Player.Name then
-			Client.PlayerPet.SetTarget(v, Coin)
-		end
-	end
-end
-
 Client.CollectGift = function()
 	for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
 		Client.Gifts.attemptClaim(v)
@@ -70,23 +61,34 @@ Client.Nearest = function()
 	return Target
 end
 Client.Fruit = function()
-    for i,v in next, Client.Save.GetSaves()[Player].Inventory.Fruit do
-        if Client.FruitCmds.GetMaxConsume(i) ~= 0 then
-            Client.FruitCmds.Consume(i, 1)
-        end
-    end
+    if Client.Save.GetSaves()[Player].Inventory.Fruit then
+		for i,v in next, Client.Save.GetSaves()[Player].Inventory.Fruit do
+			if Client.FruitCmds.GetMaxConsume(i) ~= 0 then
+				Client.FruitCmds.Consume(i, 1)
+			end
+		end
+	end
 end
 Client.Collect = function()
     local FuckYou = Client.Orbs:GetChildren()
     local MyOrbs = {}
-
-    if #FuckYou > 10 then
+    if FuckYou and #FuckYou > 10 then
         for i,v in next, FuckYou do
             MyOrbs[i] = tonumber(v.Name)
             v:Destroy()
         end
 		ReplicatedStorage:WaitForChild("Network"):WaitForChild("Orbs: Collect"):FireServer(MyOrbs)
     end
+end
+
+Client.settarget = function(Coin)
+	if Coin then
+		for i,v in next, Client.PlayerPet.GetAll() do
+			if tostring(v.owner) == Player.Name then
+				Client.PlayerPet.SetTarget(v, Coin)
+			end
+		end
+	end
 end
 
 Client.Dig = function()
