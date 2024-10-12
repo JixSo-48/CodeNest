@@ -25,8 +25,27 @@ for i,v in next, getgc() do
 			Client.requestRelics = v
 		elseif getinfo(v).name == "relicClicked" then
 			Client.relicClicked = v
+		elseif getinfo(v).name == "PromptPurchase" then
+			Client.PromptPurchase = v
 		end
 	end
+end
+
+Client.Vending = function()
+	pcall(function()
+		setthreadcontext(2)
+		local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
+		for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
+			local Vending = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible
+			if not Vending then
+				Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame()
+				ReplicatedStorage:WaitForChild("Network"):WaitForChild("VendingMachines_Purchase"):InvokeServer(require(v).MachineName)
+				wait()
+			end
+		end
+		Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
+		setthreadcontext(8)
+	end)
 end
 
 Client.AntiAFK = function()
@@ -115,11 +134,9 @@ Client.Roll = function()
 end
 
 Client.Relics = function()
-    if v then
-        for i,v in next, getupvalue(getsenv(Player.PlayerScripts.Scripts.Game.Relics).RequestRelics,1) do
-            if v.Model == v then
-                return v
-            end
+    for i,v in next, getupvalue(getsenv(Player.PlayerScripts.Scripts.Game.Relics).RequestRelics,1) do
+        if v.Model == v then
+            return v
         end
     end
 end
@@ -148,6 +165,9 @@ spawn(function()
 end)
 spawn(function()
 	while wait() do
+		if VendingMachine then
+			Client.Vending()
+		end
 		if Roll then
 			Client.Roll()
 		end
@@ -204,6 +224,15 @@ Misc:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
+Misc:CreateToggle({Name = "Auto VendingMachine"; Flag = "asddgdgdffsdfdfdsfdsf"; Default = false;
+	Callback = function(Value)
+		VendingMachine = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
 
 Misc:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
