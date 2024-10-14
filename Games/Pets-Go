@@ -16,38 +16,51 @@ local Client = {
 	Gifts = getsenv(Player.PlayerScripts.Scripts.Game["Hidden Gifts"]),
 	Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
 }
+local BlackListed = {}
+local Coins = {}
+for i,v in next, Client.Break:GetChildren() do
+	if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
+		table.insert(Coins, tostring(v:GetAttributes().BreakableID))
+	end
+end
 for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
 	Client[v.Name] = require(v)
 end
+
 for i,v in next, getgc() do
 	if type(v) == "function" and islclosure(v) then
 		if getinfo(v).name == "requestRelics" then
 			Client.requestRelics = v
 		elseif getinfo(v).name == "relicClicked" then
 			Client.relicClicked = v
-		elseif getinfo(v).name == "PromptPurchase" then
-			Client.PromptPurchase = v
 		end
 	end
 end
-
 Client.Vending = function()
-	pcall(function()
-		setthreadcontext(2)
-		local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
-		for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
-			local Vending = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible
-			if not Vending then
-				Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame()
-				ReplicatedStorage:WaitForChild("Network"):WaitForChild("VendingMachines_Purchase"):InvokeServer(require(v).MachineName)
-				wait()
-			end
+	setthreadcontext(2)
+	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
+	for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
+		local Vending = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible
+		if not Vending then
+			wait(1)
+			Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-10)
+			ReplicatedStorage:WaitForChild("Network"):WaitForChild("VendingMachines_Purchase"):InvokeServer(tostring(require(v).MachineName))
+			wait(1)
 		end
-		Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
-		setthreadcontext(8)
-	end)
+	end
+	Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
+	setthreadcontext(8)
 end
-
+Client.GrabFruits = function()
+	for i,v in next, Client.Break:GetChildren() do
+		if v:FindFirstChild("base") then
+			local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
+			Player.Character.HumanoidRootPart.CFrame = v.base.Hitbox.CFrame
+			wait()
+			Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
+		end
+	end
+end
 Client.AntiAFK = function()
 	if Player.Idled then
 		for i,v in next, getconnections(Player.Idled) do
@@ -62,14 +75,18 @@ Client.CollectRelics = function()
 end
 Client.CollectGift = function()
 	for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
+		local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
+		Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame 
 		Client.Gifts.attemptClaim(v)
+		wait()
+		Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 	end
 end
 Client.Nearest = function()
 	local Target, MaxDistance = nil, math.huge
 	for i,v in next, Client.Break:GetChildren() do
 		local click = v:FindFirstChild("ClickDetector", true)
-		if v:IsA("Model") and v:FindFirstChildWhichIsA("BasePart") then
+		if v:IsA("Model") and v:FindFirstChildWhichIsA("BasePart") and not table.find(BlackListed, tostring(v:GetAttributes().BreakableID)) then
 			local Distance = (v:GetModelCFrame().Position - Player.Character.HumanoidRootPart.Position).magnitude
 			if Distance <= MaxDistance then
 				MaxDistance = Distance
@@ -134,9 +151,11 @@ Client.Roll = function()
 end
 
 Client.Relics = function()
-    for i,v in next, getupvalue(getsenv(Player.PlayerScripts.Scripts.Game.Relics).RequestRelics,1) do
-        if v.Model == v then
-            return v
+    if v then
+        for i,v in next, getupvalue(getsenv(Player.PlayerScripts.Scripts.Game.Relics).RequestRelics,1) do
+            if v.Model == v then
+                return v
+            end
         end
     end
 end
@@ -148,6 +167,11 @@ Client.Upgrade = function()
 		end
 	end
 end
+Client.AutoCraft = function()
+	for i=1, 22 do
+		ReplicatedStorage:WaitForChild("Network"):WaitForChild("CraftingMachine_Craft"):InvokeServer("PotionCraftingMachine", i)
+	end
+end
 local Speed = Client.PlayerPet.CalculateSpeedMultiplier
 Client.PlayerPet.CalculateSpeedMultiplier = function(...)
 	if not Speedy then
@@ -157,16 +181,22 @@ Client.PlayerPet.CalculateSpeedMultiplier = function(...)
 	end
 end
 spawn(function()
-	while wait() do
+	while wait(5) do
 		if Upgrade then
 			Client.Upgrade()
+		end
+		if AutoCraft then
+			Client.AutoCraft()
 		end
 	end
 end)
 spawn(function()
 	while wait() do
-		if VendingMachine then
+		if Vending then
 			Client.Vending()
+		end
+		if GrabFruits then
+			Client.GrabFruits()
 		end
 		if Roll then
 			Client.Roll()
@@ -215,7 +245,49 @@ local Misc = Basic:CreateSection("Features")
 
 local hello = UI:CreatePage("Destroy UI")
 local Nig = hello:CreateSection("Destroy")
+local Item = Misc:CreateDropdown({ 
+	Name = "Coin types"; -- required: name of element
+	Callback = function(v) 
+		table.insert(BlackListed, v) 
+	end;
+	Options = Coins;
+	ItemSelecting = true; 
+	DefaultItemSelected = "";
+	Warning = "This has a warning";
+	WarningIcon = 12345;
+})
+local Item2 = Misc:CreateDropdown({ 
+	Name = "BlackListed Coin Types"; -- required: name of element
+	Callback = function(v) 
+		table.remove(BlackListed, tonumber(v))
+	end;
+	Options = BlackListed;
+	ItemSelecting = true; 
+	DefaultItemSelected = "";
+	Warning = "This has a warning";
+	WarningIcon = 12345;
+})
+spawn(function()
+	while wait() do  
+		for i,v in next, Client.Break:GetChildren() do
+			if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
+				table.insert(Coins, tostring(v:GetAttributes().BreakableID))
+			end
+		end
+		Item:Update(Coins)
+		Item2:Update(BlackListed)
+		wait()
+	end
+end)
 
+Misc:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; Default = false;
+	Callback = function(Value)
+		AutoCraft = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
 Misc:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Roll = Value
@@ -224,15 +296,24 @@ Misc:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
-Misc:CreateToggle({Name = "Auto VendingMachine"; Flag = "asddgdgdffsdfdfdsfdsf"; Default = false;
+
+Misc:CreateToggle({Name = "Auto Grab Spawned Fruits"; Flag = "asdffsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
-		VendingMachine = Value
+		GrabFruits = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
+Misc:CreateToggle({Name = "Auto Vending Machine"; Flag = "asdffsdcxfdfdsfdsf"; Default = false;
+	Callback = function(Value)
+		Vending = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
 
 Misc:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
