@@ -1,33 +1,50 @@
+local CodeNest = {}
+local Global = {}
 
-local Services = setmetatable({}, {__index = function(Self, Idx) return game:GetService(Idx) end})
-local script = {
-    Functions = {},
-    ModuleScripts = {},
-    LocalScripts = {},
-    Player = Services.Players.LocalPlayer
-}
+for i,v in next, game.GetChildren(game) do -- Globalize all Services to make scripting easier
+    Global[v.ClassName] = cloneref(v)
+end
 
-function script:GetHumanoid()
-    return script.Player and script.Player.Character and script.Player.Character:FindFirstChildWhichIsA("Humanoid")
+Global.Player = Players.LocalPlayer
+
+function CodeNest:GetCharacter()
+    return Global.Player
 end
-function script:WalkSpeed(Speed)
-    sethiddenproperty(script:GetHumanoid(), "WalkSpeed", Speed)
+
+function CodeNest:GetHumanoid()
+    return Global.Player.Character and Global.Player.Character.FindFirstChild(Global.Player.Character, "Humanoid")
 end
-function script:JumPower(Power)
-    sethiddenproperty(script:GetHumanoid(), "JumpPower", Power)
+
+function CodeNest:IsLoaded()
+    return game:IsLoaded() and CodeNest.Loaded
 end
-function script:EditHumanoid()
-    local OldNameCall = nil
-    OldNameCall = hookmetamethod(game, "__namecall", function(A, B, C)
-        local Self = ...
-        local Args = {...}
-        if A  and A.ClassName == "Humanoid" and B == "WalkSpeed" and C then
-            return script.GetHumanoid().WalkSpeed
-        end
-        if A and A.ClassName == "Humanoid" and B == "JumpPower" and C then
-            return script.GetHumanoid().JumpPower
-        end
-        return OldNameCall(A, B, C)
-    end)
+
+function CodeNest:GetPlayers()
+    return Global.Players.GetPlayers(Global.Players)
 end
-return script
+
+function CodeNest:Mag(P1, P2)
+    return (P1.Position - P2.Position).Mag
+end
+
+function CodeNest:WalkTo(Position)
+    CodeNest.GetHumanoid():MoveTo(Position)
+end
+
+function CodeNest:CreatePath(Model, Position, Table)
+    if Model and Position and Table then
+        local Travel = Global.PathfindingService:CreatePath(Table or {})
+        Travel:ComputeAsync(Model.PrimaryPart.Position, Position)
+        return Travel:GetWaypoints()
+    end
+end
+
+function CodeNest:PathWalkTo(Model, Position, Table)
+    local Way = CodeNest:CreatePath(Model, Position, Table)
+    for i,v in next, Way do
+        CodeNest:GetHumanoid():MoveTo(v.Position)
+        CodeNest:GetHumanoid().MoveToFinished:Wait()
+    end
+end
+
+return CodeNest
