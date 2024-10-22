@@ -39,19 +39,18 @@ for i,v in next, getgc() do
 	end
 end
 Client.Vending = function()
-	setthreadcontext(2)
 	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
 	for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
 		local Vending = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible
 		if not Vending then
-			wait(1)
-			Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-10)
-			ReplicatedStorage:WaitForChild("Network"):WaitForChild("VendingMachines_Purchase"):InvokeServer(tostring(require(v).MachineName))
-			wait(1)
+			Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+			for i=1, 5 do
+				ReplicatedStorage:WaitForChild("Network"):WaitForChild("VendingMachines_Purchase"):InvokeServer(tostring(require(v).MachineName))
+			end
+			wait()
 		end
 	end
 	Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
-	setthreadcontext(8)
 end
 Client.GrabFruits = function()
 	for i,v in next, Client.Break:GetChildren() do
@@ -76,13 +75,14 @@ Client.CollectRelics = function()
 	end
 end
 Client.CollectGift = function()
+	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
 	for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
-		local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-		Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame 
-		Client.Gifts.attemptClaim(v)
-		wait()
-		Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
+		repeat wait()
+			Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
+			Client.Gifts.attemptClaim(v)
+		until not v or v.Model
 	end
+	Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
 Client.Nearest = function()
 	local Target, MaxDistance = nil, math.huge
@@ -184,16 +184,21 @@ Client.PlayerPet.CalculateSpeedMultiplier = function(...)
 end
 spawn(function()
 	while wait(5) do
-		if Upgrade then
-			Client.Upgrade()
-		end
-		if AutoCraft then
-			Client.AutoCraft()
-		end
+		pcall(function()
+			if Upgrade then
+				Client.Upgrade()
+			end
+			if AutoCraft then
+				Client.AutoCraft()
+			end
+		end)
 	end
 end)
 spawn(function()
 	while wait() do
+		if Gifts then
+			Client.CollectGift()
+		end
 		if Vending then
 			Client.Vending()
 		end
@@ -217,9 +222,6 @@ spawn(function()
 		end
 		if Fruit then
 			Client.Fruit()
-		end
-		if Gifts then
-			Client.CollectGift()
 		end
 		if Relics then
 			Client.CollectRelics()
