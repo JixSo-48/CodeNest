@@ -8,7 +8,7 @@ end
 Global.Player = Global.Players.LocalPlayer
 
 function CodeNest:GetCharacter()
-    return Global.Player
+    return Global.Player.Character
 end
 
 function CodeNest:GetHumanoid()
