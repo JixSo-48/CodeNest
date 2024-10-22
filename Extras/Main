@@ -5,7 +5,7 @@ for i,v in next, game.GetChildren(game) do -- Globalize all Services to make scr
     Global[v.ClassName] = cloneref(v)
 end
 
-Global.Player = Players.LocalPlayer
+Global.Player = Global.Players.LocalPlayer
 
 function CodeNest:GetCharacter()
     return Global.Player
