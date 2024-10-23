@@ -17,6 +17,7 @@ local Client = {
 	Digsites = Workspace.__THINGS.Digging,
 	Gifts = getsenv(Player.PlayerScripts.Scripts.Game["Hidden Gifts"]),
 	Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
+	Network = require(ReplicatedStorage.Library.Client.Network),
 }
 local BlackListed = {}
 local Coins = {}
@@ -29,7 +30,12 @@ for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
 	Client[v.Name] = require(v)
 end
 
-for i,v in next, getgc() do
+for i,v in next, getgc(true) do
+	if type(v) == "table" then
+        if rawget(v, "Click") then
+            Client.ClickBreakable = v.Click
+        end
+    end
 	if type(v) == "function" and islclosure(v) then
 		if getinfo(v).name == "requestRelics" then
 			Client.requestRelics = v
@@ -38,14 +44,23 @@ for i,v in next, getgc() do
 		end
 	end
 end
+
+Client.FireServer = function(Remote, ...)
+	Client.Network.Fire(Remote, unpack(...))
+end
+
+Client.InvokeServer = function(Remote, ...)
+	Client.Network.Invoke(Remote, unpack(...))
+end
+
 Client.Vending = function()
 	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
 	for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
-		local Vending = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible
-		if not Vending then
+		local Vending = Workspace.MAP:FindFirstChild("Machines", true)
+		if Vending and Vending:FindFirstChild(require(v).MachineName) and not Vending[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible then
 			Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
 			for i=1, 5 do
-				ReplicatedStorage:WaitForChild("Network"):WaitForChild("VendingMachines_Purchase"):InvokeServer(tostring(require(v).MachineName))
+				Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
 			end
 			wait()
 		end
@@ -115,12 +130,13 @@ Client.Collect = function()
             MyOrbs[i] = tonumber(v.Name)
             v:Destroy()
         end
-		ReplicatedStorage:WaitForChild("Network"):WaitForChild("Orbs: Collect"):FireServer(MyOrbs)
+		Client.FireServer("Orbs: Collect", {MyOrbs})
     end
 end
 
 Client.settarget = function(Coin)
 	if Coin then
+		Client.ClickBreakable:FireServer("Coin")
 		for i,v in next, Client.PlayerPet.GetAll() do
 			if tostring(v.owner) == Player.Name then
 				Client.PlayerPet.SetTarget(v, Coin)
@@ -134,8 +150,8 @@ Client.Dig = function()
 	for i,v in next, Client.PlayerPet.GetAll() do
 		if tostring(v.owner) == Player.Name then
 			for i2,v2 in next, getupvalue(Client.DiggingCmds.Target, 1) do
-				ReplicatedStorage:WaitForChild("Network"):WaitForChild("Digging_Target"):InvokeServer(tonumber(v2.uid), tostring(v.euid))
-				ReplicatedStorage:WaitForChild("Network"):WaitForChild("Digging_Claim"):InvokeServer(tonumber(v2.uid))
+				Client.InvokeServer("Digging_Target", {tonumber(v2.uid), tostring(v.euid)})
+				Client.InvokeServer("Digging_Claim", {tonumber(v2.uid)})
 			end
 		end
 	end
@@ -143,13 +159,13 @@ end
 Client.Potion = function()
 	if Client.Save.GetSaves()[Player].Inventory.Consumable then
 		for i,v in next, Client.Save.GetSaves()[Player].Inventory.Consumable do
-			ReplicatedStorage:WaitForChild("Network"):WaitForChild("Consumables_Consume"):InvokeServer(i, 1)
+			Client.InvokeServer("Consumables_Consume",{i, 1})
 		end
 	end
 end
 
 Client.Roll = function()
-	ReplicatedStorage:WaitForChild("Network"):WaitForChild("Eggs_Roll"):InvokeServer()
+	Client.InvokeServer("Eggs_Roll", {})
 end
 
 Client.Relics = function()
@@ -171,9 +187,10 @@ Client.Upgrade = function()
 end
 Client.AutoCraft = function()
 	for i=1, 22 do
-		ReplicatedStorage:WaitForChild("Network"):WaitForChild("CraftingMachine_Craft"):InvokeServer("PotionCraftingMachine", i)
+		Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i})
 	end
 end
+
 local Speed = Client.PlayerPet.CalculateSpeedMultiplier
 Client.PlayerPet.CalculateSpeedMultiplier = function(...)
 	if not Speedy then
@@ -231,7 +248,7 @@ end)
 Client.AntiAFK()
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
-    Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    Name = "CodeNest: " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
     ConfigFolder = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
     Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
     Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
