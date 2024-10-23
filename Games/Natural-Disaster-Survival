@@ -118,6 +118,13 @@ Misc:CreateToggle({Name = "Anti Fall Damage"; Flag = "sdkjfhk4sdfhjjsdfhkjnnnn";
     CallbackOnCreation = true;
 })
 
+Misc:CreateButton({
+	Name = "Reset Player"; -- required: name of element
+	Callback = function()  -- required: function to be called when button is pressed
+		Client.ResetPlayer()
+	end
+})
+
 Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "sdfjsdhfjfs"; ToggleFlag = "Toggle";Min = 1;Max = 200;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 		WalkSpeedValue = newValue
