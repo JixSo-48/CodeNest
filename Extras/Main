@@ -6,7 +6,7 @@ for i,v in next, game.GetChildren(game) do -- Globalize all Services to make scr
 end
 
 Global.Player = Global.Players.LocalPlayer
-
+CodeNest.Player = Global.Player
 function CodeNest:GetCharacter()
     return Global.Player.Character
 end
@@ -45,6 +45,15 @@ function CodeNest:PathWalkTo(Model, Position, Table)
         CodeNest:GetHumanoid():MoveTo(v.Position)
         CodeNest:GetHumanoid().MoveToFinished:Wait()
     end
+end
+
+function CodeNest:Teleport(Model, Position)
+    Model.PrimaryPart.CFrame = CFrame.new(Vector3.new(Position))
+end
+
+function CodeNest:PlayerTeleport(Position, offset)
+    if offset == nil then offset = CFrame.new(0,0,0) end
+    Global.Player.Character.PrimaryPart.CFrame = Position * offset
 end
 
 return CodeNest
