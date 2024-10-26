@@ -1,4 +1,10 @@
 math.randomseed(tick())
+local G = getgenv and getgenv()
+if G then
+getgenv().print = print
+getgenv().error = error
+getgenv().warn = warn
+end
 local Services = setmetatable({}, {__index = function(Self, Idx) return game:GetService(Idx) end})
 local ReplicatedStorage = Services.ReplicatedStorage
 local Players = Services.Players
