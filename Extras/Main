@@ -1,6 +1,8 @@
 local CodeNest = {}
 local Global = {}
-
+getgenv().C = function()
+    return CodeNest
+end
 for i,v in next, game.GetChildren(game) do -- Globalize all Services to make scripting easier
     Global[v.ClassName] = cloneref(v)
 end
