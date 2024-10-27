@@ -10,6 +10,8 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local wait = task.wait
 local spawn = task.spawn
 local Client = {
+    WantedRemotes = {},
+    WhiteListed = {},
     
 }
 
@@ -21,6 +23,14 @@ for i,v in next, ReplicatedStorage.Library.Util:GetChildren() do
     Client[v.Name] = require(v)
 end
 
+for i,v in next, ReplicatedStorage.Network:GetChildren() do
+    if v.Name:find("_Consume") then
+        local String = string.split(v.Name, "_")[1]
+        table.insert(Client.WantedRemotes, String)
+    end
+end
+
+
 for i,v in next, getgc() do
     if type(v) == "function" and islclosure(v) then
         local Info = getinfo(v).name
@@ -29,13 +39,35 @@ for i,v in next, getgc() do
         end
     end
 end
-print(Client.Network.Fire)
+
 Client.FireServer = function(Remote, ...)
 	Client.Network.Fire(Remote, unpack(...))
 end
 
 Client.InvokeServer = function(Remote, ...)
 	Client.Network.Invoke(Remote, unpack(...))
+end
+
+Client.Owned = function(Item)
+    for i,v in next, Client.Save.GetSaves()[Player].Inventory.Misc do
+        if Item == v.id then
+            return true
+        else
+            return false
+        end
+    end
+end
+
+Client.UseItem = function(Item)
+    if Client.Owned(Item) then
+        Client.InokeServer(tostring(Item) .. "_Consume", {})
+    end
+end
+
+Client.Items = function(Table)
+    for i,v in next, Table do
+        Client.UseItem(v)
+    end
 end
 
 Client.Upgrade = function()
@@ -66,7 +98,7 @@ Client.Rebirth = function()
 end
 
 Client.Collect = function()
-    local OldOrbs = workspace.__THINGS.Orbs:GetChildren()
+    local OldOrbs = Workspace.__THINGS.Orbs:GetChildren()
     local MyOrbs = {}
 
     if #OldOrbs > 10 then
@@ -88,6 +120,7 @@ Client.AutoFarmZones = function()
             Client.InvokeServer("Teleports_RequestTeleport", {Owned})
         end
         if Zone then
+            repeat wait() until (Player.Character.Humanoid.RootPart.Position - Zone.BREAK_ZONES.BREAK_ZONE.Position).magnitude < 100
             if Zone:FindFirstChild("Buy Signs") then
                 Player.Character.Humanoid:MoveTo(Zone.BREAKABLE_SPAWNS.Main.Position + Vector3.new(0,1,0))
             elseif Zone:FindFirstChild("BREAKABLE_SPAWNS") and Zone.BREAKABLE_SPAWNS:FindFirstChild("Boss") then
@@ -105,7 +138,7 @@ Client.AutoFarmZones = function()
 end
 
 spawn(function()
-    while wait() do
+    while wait(.2) do
         if AutoTap then
             Client.Tap()
         end
@@ -117,6 +150,15 @@ spawn(function()
         end
         if Zones then
             Client.AutoFarmZones()
+        end 
+        if ToyDuck then
+            Client.UseItem("SqueakyToy")
+        end
+        if ToyBone then
+            Client.UseItem("ToyBone")
+        end
+        if ToyBall then
+            Client.UseItem("ToyBall")
         end
     end
 end)
@@ -141,7 +183,7 @@ local Basic = UI:CreatePage("AutoFarm")
 local Misc = Basic:CreateSection("Farmming")
 
 local Consume = UI:CreatePage("Consumes")
-local Consume2 = Consume:CreateSection("Auto Consumes")
+local Consume2 = Consume:CreateSection("Auto Basic Consumes")
 
 local Destroyer = UI:CreatePage("Destroy GUI")
 local Destroy = Destroyer:CreateSection("Gui")
@@ -177,6 +219,35 @@ Misc:CreateToggle({Name = "Auto Collect Orbs"; Flag = "ssfdhi"; Default = false;
 Consume2:CreateToggle({Name = "Auto Eat Fruits"; Flag = "asdfj"; Default = false;
 	Callback = function(Value)
 		Fruits = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+
+local Toys = Consume:CreateSection("Auto Toys")
+Toys:CreateToggle({Name = "Auto Use ToyDuck"; Flag = "asdfsj"; Default = false;
+	Callback = function(Value)
+		ToyDuck = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Toys:CreateToggle({Name = "Auto Use ToyBone"; Flag = "asdfsxj"; Default = false;
+	Callback = function(Value)
+		ToyBone = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Toys:CreateToggle({Name = "Auto Use ToyBall"; Flag = "asddfsxj"; Default = false;
+	Callback = function(Value)
+		ToyBall = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
