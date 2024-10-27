@@ -1,0 +1,184 @@
+local Services = setmetatable({}, {__index = function(Self, Index)
+	return game:GetService(Index)
+end})
+local Players = Services.Players
+local RunService = Services.RunService
+local Workspace = Services.Workspace
+local Player = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+local ReplicatedStorage = Services.ReplicatedStorage
+local wait = task.wait
+local spawn = task.spawn
+local Client = {
+    
+}
+
+for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
+    Client[v.Name] = require(v)
+end
+
+for i,v in next, ReplicatedStorage.Library.Util:GetChildren() do
+    Client[v.Name] = require(v)
+end
+
+for i,v in next, getgc() do
+    if type(v) == "function" and islclosure(v) then
+        local Info = getinfo(v).name
+        if Info == "GetNearestBreakable" then
+            Client.GetNearestBreakable = v
+        end
+    end
+end
+print(Client.Network.Fire)
+Client.FireServer = function(Remote, ...)
+	Client.Network.Fire(Remote, unpack(...))
+end
+
+Client.InvokeServer = function(Remote, ...)
+	Client.Network.Invoke(Remote, unpack(...))
+end
+
+Client.Upgrade = function()
+    for i=1, 99 do wait()
+        Client.InvokeServer("EquipSlotsMachine_RequestPurchase", {i})
+    end
+end
+
+Client.GetFruits = function()
+    for i,v in next, Client.Save.GetSaves()[Player].Inventory.Fruit do
+        if Client.FruitCmds.GetMaxConsume(i) ~= 0 then
+            Client.FruitCmds.Consume(i, 1)
+        end
+    end
+end
+
+Client.Tap = function()
+    local Target = Client.GetNearestBreakable()
+    if Target then
+        Client.FireServer("Breakables_PlayerDealDamage",{Target.Name})
+    end
+end
+
+Client.Rebirth = function()
+    if Client.RebirthCmds.GetNextRebirth() and Client.RebirthCmds.GetNextRebirth().RebirthNumber then
+        Client.InvokeServer("Rebirth_Request", {tostring(Client.RebirthCmds.GetNextRebirth().RebirthNumber)})
+    end
+end
+
+Client.Collect = function()
+    local OldOrbs = workspace.__THINGS.Orbs:GetChildren()
+    local MyOrbs = {}
+
+    if #OldOrbs > 10 then
+        for i,v in next, OldOrbs do
+            MyOrbs[i] = tonumber(v.Name)
+            v:Destroy()
+        end
+    end
+    Client.FireServer("Orbs: Collect", {MyOrbs})
+end
+
+Client.AutoFarmZones = function()
+    local Owned = Client.ZoneCmds.GetMaxOwnedZone()
+    if Owned then
+        local Zone = Client.ZonesUtil.GetInteractFolder(Owned)
+        if not Zone then
+            Client.InvokeServer("Teleports_RequestTeleport", {Owned})
+        elseif (Player.Character.Humanoid.RootPart.Position - Zone.BREAK_ZONES.BREAK_ZONE.Position).magnitude > 100 then
+            Client.InvokeServer("Teleports_RequestTeleport", {Owned})
+        end
+        if Zone then
+            if Zone:FindFirstChild("Buy Signs") then
+                Player.Character.Humanoid:MoveTo(Zone.BREAKABLE_SPAWNS.Main.Position + Vector3.new(0,1,0))
+            elseif Zone:FindFirstChild("BREAKABLE_SPAWNS") and Zone.BREAKABLE_SPAWNS:FindFirstChild("Boss") then
+                Player.Character.Humanoid:MoveTo(Zone.BREAKABLE_SPAWNS.Main.Position + Vector3.new(0,1,0))
+            else
+                Player.Character.Humanoid:MoveTo(Zone.BREAK_ZONES.BREAK_ZONE.Position + Vector3.new(0,1,0))
+            end
+        end
+        local NotOwned = Client.ZoneCmds.GetNextZone()
+        Client.InvokeServer("Zones_RequestPurchase", {NotOwned})
+    end
+    Client.Tap()
+    Client.Collect()
+    Client.Rebirth()
+end
+
+spawn(function()
+    while wait() do
+        if AutoTap then
+            Client.Tap()
+        end
+        if Fruits then
+            Client.GetFruits()
+        end
+        if Collect then
+            Client.Collect()
+        end
+        if Zones then
+            Client.AutoFarmZones()
+        end
+    end
+end)
+
+local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
+local UI = Atlas.new({
+    Name = "CodeNest: " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    ConfigFolder = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
+    Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
+    Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
+    -- Atlas Loader:
+    UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
+    FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
+    CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
+        return true
+    end;
+    Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
+})
+
+local Basic = UI:CreatePage("AutoFarm")
+local Misc = Basic:CreateSection("Farmming")
+
+local Consume = UI:CreatePage("Consumes")
+local Consume2 = Consume:CreateSection("Auto Consumes")
+
+local Destroyer = UI:CreatePage("Destroy GUI")
+local Destroy = Destroyer:CreateSection("Gui")
+
+
+Misc:CreateToggle({Name = "Auto Tap"; Flag = "sdf"; Default = false;
+	Callback = function(Value)
+		AutoTap = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "AutoFarm Next Zone"; Flag = "qweu"; Default = false;
+	Callback = function(Value)
+		Zones = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Collect Orbs"; Flag = "ssfdhi"; Default = false;
+	Callback = function(Value)
+		Collect = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Consume2:CreateToggle({Name = "Auto Eat Fruits"; Flag = "asdfj"; Default = false;
+	Callback = function(Value)
+		Fruits = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
