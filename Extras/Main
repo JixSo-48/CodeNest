@@ -1,39 +1,39 @@
 local CodeNest = {}
 local Global = {}
-getgenv().C = function()
-    return CodeNest
-end
+
 for i,v in next, game.GetChildren(game) do -- Globalize all Services to make scripting easier
     Global[v.ClassName] = cloneref(v)
 end
 
 Global.Player = Global.Players.LocalPlayer
 CodeNest.Player = Global.Player
-function CodeNest:GetCharacter()
+
+getgenv().C = CodeNest
+function CodeNest.GetCharacter()
     return Global.Player.Character
 end
 
-function CodeNest:GetHumanoid()
+function CodeNest.GetHumanoid()
     return Global.Player.Character and Global.Player.Character.FindFirstChild(Global.Player.Character, "Humanoid")
 end
 
-function CodeNest:IsLoaded()
+function CodeNest.IsLoaded()
     return game:IsLoaded() and CodeNest.Loaded
 end
 
-function CodeNest:GetPlayers()
+function CodeNest.GetPlayers()
     return Global.Players.GetPlayers(Global.Players)
 end
 
-function CodeNest:Mag(P1, P2)
+function CodeNest.Mag(P1, P2)
     return (P1.Position - P2.Position).Mag
 end
 
-function CodeNest:WalkTo(Position)
+function CodeNest.WalkTo(Position)
     CodeNest.GetHumanoid():MoveTo(Position)
 end
 
-function CodeNest:CreatePath(Model, Position, Table)
+function CodeNest.CreatePath(Model, Position, Table)
     if Model and Position and Table then
         local Travel = Global.PathfindingService:CreatePath(Table or {})
         Travel:ComputeAsync(Model.PrimaryPart.Position, Position)
@@ -41,7 +41,7 @@ function CodeNest:CreatePath(Model, Position, Table)
     end
 end
 
-function CodeNest:PathWalkTo(Model, Position, Table)
+function CodeNest.PathWalkTo(Model, Position, Table)
     local Way = CodeNest:CreatePath(Model, Position, Table)
     for i,v in next, Way do
         CodeNest:GetHumanoid():MoveTo(v.Position)
@@ -49,13 +49,93 @@ function CodeNest:PathWalkTo(Model, Position, Table)
     end
 end
 
-function CodeNest:Teleport(Model, Position)
+function CodeNest.Teleport(Model, Position)
     Model.PrimaryPart.CFrame = CFrame.new(Vector3.new(Position))
 end
 
-function CodeNest:PlayerTeleport(Position, offset)
+function CodeNest.PlayerTeleport(Position, offset)
     if offset == nil then offset = CFrame.new(0,0,0) end
     Global.Player.Character.PrimaryPart.CFrame = Position * offset
+end
+
+function CodeNest.Rejoin()
+    Global.TeleportService:Teleport(game.PlaceId)
+end
+
+function CodeNest.ServerHop()
+    spawn(function()
+        while wait() do
+            local Gay = Global.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. game.PlaceId .. '/servers/Public?sortOrder=Asc&limit=100'))
+            for i,v in next, Gay.data do
+                if v.playing and v.playing < v.maxPlayers then
+                    Global.TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
+                end
+            end
+        end
+    end)    
+end
+function CodeNest.NoClip()
+    for i,v in next, Player.Character:GetChildren() do
+        if v:IsA("BasePart") then
+            if v.CanCollide then
+                v.CanCollide = false
+            end
+        end
+    end
+end
+
+function CodeNest.Float()
+    for i,v in next, Player.Character:GetChildren() do
+        if v:IsA("BasePart") then
+            v.Velocity = Vector3.new(0,0,0)
+        end
+    end
+end
+
+function CodeNest.GetTool(Name)
+    if Player.Backpack:FindFirstChild(Name, true) then
+        Player.Character:WaitForChild("Humanoid"):EquipTool(Player.Backpack:FindFirstChild(Name, true))
+    end
+end
+
+function CodeNest.FindFirstChild(Parent, Child)
+    return Parent:FindFirstChild(Child) 
+end
+
+function CodeNest.GetDescendants(Parent)
+    return Parent:GetDescendants()
+end
+
+function CodeNest.WalkSpeed(Speed)
+    local OldNameCall = nil
+    OldNameCall = hookmetamethod(game, "__index", function(A, B, C)
+        if A and B == "WalkSpeed" then
+            return Speed
+        end
+        return OldNameCall(A, B, C)
+    end)
+    sethiddenproperty(CodeNest.GetHumanoid(), "WalkSpeed", Speed)
+end
+
+
+function CodeNest.JumpPowerHeight()
+    if CodeNest.GetHumanoid().JumpHeight then
+        return "JumpHeight"
+    else
+        return "JumpPower"
+    end
+end
+
+function CodeNest.JumpPower(Height)
+    local I = CodeNest.JumpPowerHeight()
+    local OldNameCall = nil
+    OldNameCall = hookmetamethod(game, "__index", function(A, B, C)
+        if A and B == I then
+            return Height
+        end
+        return OldNameCall(A, B, C)
+    end)
+    sethiddenproperty(CodeNest.GetHumanoid(), CodeNest.JumpPowerHeight(), Height)
 end
 
 return CodeNest
