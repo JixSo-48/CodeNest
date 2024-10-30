@@ -55,6 +55,30 @@ end
 
 Client.Vending = function()
 	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
+	for i,v in next, ReplicatedStorage.__DIRECTORY.CustomMerchants:GetChildren() do
+		local Vending = Workspace.MAP:FindFirstChild("Machines", true)
+		print(i,v)
+		if Vending and Vending:FindFirstChild(require(v).MachineName)then
+			Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+			for i=1, 5 do
+				Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
+			end
+			wait()
+		end
+	end
+	Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
+end
+
+
+Client.Merchant = function()
+    for i=1, 6 do
+    Client.InvokeServer("CustomMerchants_Purchase", {"StandardMerchant",i})
+    end
+end
+
+
+Client.Vending = function()
+	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
 	for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
 		local Vending = Workspace.MAP:FindFirstChild("Machines", true)
 		if Vending and Vending:FindFirstChild(require(v).MachineName) and not Vending[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible then
@@ -67,6 +91,13 @@ Client.Vending = function()
 	end
 	Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
 end
+local args = {
+    [1] = "StandardMerchant",
+    [2] = 2
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("CustomMerchants_Purchase"):InvokeServer(unpack(args))
+
 Client.GrabFruits = function()
 	for i,v in next, Client.Break:GetChildren() do
 		if v:FindFirstChild("base") then
@@ -199,9 +230,20 @@ Client.PlayerPet.CalculateSpeedMultiplier = function(...)
 		return math.huge
 	end
 end
+RunService.Heartbeat:Connect(function()
+	if Collect then
+		Client.Collect()
+	end
+	if Breakables then
+		Client.settarget(Client.Nearest())
+	end
+end)
 spawn(function()
 	while wait(5) do
 		pcall(function()
+			if Mer then
+				Client.Merchant()
+			end
 			if Upgrade then
 				Client.Upgrade()
 			end
@@ -261,12 +303,63 @@ local UI = Atlas.new({
     end;
     Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
 })
-local Basic = UI:CreatePage("AutoFarm")
+
+
+
+local AutoRoll = UI:CreatePage("AutoRoll")
+local AutoRoll2 = AutoRoll:CreateSection("Features")
+
+local FPS = UI:CreatePage("FPS")
+local FPS2 = FPS:CreateSection("Features")
+
+local Pots = UI:CreatePage("Potions")
+local Pots2 = Pots:CreateSection("Features")
+
+local Coins = UI:CreatePage("Breakables")
+local Coins2 = Coins:CreateSection("Features")
+
+local Fruits = UI:CreatePage("Fruits")
+local Fruits2 = Fruits:CreateSection("Features")
+
+local Merchant = UI:CreatePage("Merchants")
+local Merchant2 = Merchant:CreateSection("Features")
+
+local Basic = UI:CreatePage("Vending Machine")
 local Misc = Basic:CreateSection("Features")
 
 local hello = UI:CreatePage("Destroy UI")
 local Nig = hello:CreateSection("Destroy")
-local Item = Misc:CreateDropdown({ 
+
+
+FPS2:CreateToggle({Name = "Disable 3D Rendering"; Flag = "D3"; Default = false;
+	Callback = function(Value)
+		if Value then
+			RunService:Set3dRenderingEnabled(false)
+		elseif not Value then
+			RunService:Set3dRenderingEnabled(true)
+		end
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+
+FPS2:CreateSliderToggle({Name = "FPS"; SliderFlag = "FPSFf"; ToggleFlag = "Toggle";Min = 5;Max = 240;AllowOutOfRange = true;Digits = 2;SliderDefault = 100;ToggleDefault = false;
+	SliderCallback = function(newValue)
+		if YesFPS then
+			setfpscap(tonumber(newValue))
+		end
+	end;
+	ToggleCallback = function(newValue) 
+		YesFPS = newValue
+	end;
+	Warning = "This has a warning";
+	WarningIcon = 12345;
+	CallbackOnCreation = true;
+})
+
+local Item = Coins2:CreateDropdown({ 
 	Name = "Coin types"; -- required: name of element
 	Callback = function(v) 
 		table.insert(BlackListed, v) 
@@ -277,7 +370,7 @@ local Item = Misc:CreateDropdown({
 	Warning = "This has a warning";
 	WarningIcon = 12345;
 })
-local Item2 = Misc:CreateDropdown({ 
+local Item2 = Coins2:CreateDropdown({ 
 	Name = "BlackListed Coin Types"; -- required: name of element
 	Callback = function(v) 
 		table.remove(BlackListed, tonumber(v))
@@ -301,7 +394,7 @@ spawn(function()
 	end
 end)
 
-Misc:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; Default = false;
+Pots2:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		AutoCraft = Value
 	end;
@@ -309,7 +402,7 @@ Misc:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; Def
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
-Misc:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false;
+AutoRoll2:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Roll = Value
 	end;
@@ -317,8 +410,15 @@ Misc:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
-
-Misc:CreateToggle({Name = "Auto Grab Spawned Fruits"; Flag = "asdffsdfdfdsfdsf"; Default = false;
+Merchant2:CreateToggle({Name = "Auto Grab Merchant Buyable items"; Flag = "asdffsdfdasdhgfdsfdsf"; Default = false;
+	Callback = function(Value)
+		Mer = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+Coins2:CreateToggle({Name = "Auto Grab Spawned Fruits"; Flag = "asdffsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		GrabFruits = Value
 	end;
@@ -336,7 +436,7 @@ Misc:CreateToggle({Name = "Auto Vending Machine"; Flag = "asdffsdcxfdfdsfdsf"; D
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default = false;
+Coins2:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Gifts = Value
 	end;
@@ -345,7 +445,7 @@ Misc:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default 
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Eat Fruits"; Flag = "asdfsdfdsf"; Default = false;
+Fruits2:CreateToggle({Name = "Auto Eat All Fruits"; Flag = "asdfsdfdsf"; Default = false;
 	Callback = function(Value)
 		Fruit = Value
 	end;
@@ -354,7 +454,7 @@ Misc:CreateToggle({Name = "Auto Eat Fruits"; Flag = "asdfsdfdsf"; Default = fals
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Use Potions"; Flag = "asdfshgfhdfdsf"; Default = false;
+Pots2:CreateToggle({Name = "Auto Use All Potions"; Flag = "asdfshgfhdfdsf"; Default = false;
 	Callback = function(Value)
 		Potion = Value
 	end;
@@ -363,7 +463,7 @@ Misc:CreateToggle({Name = "Auto Use Potions"; Flag = "asdfshgfhdfdsf"; Default =
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Dig"; Flag = "a"; Default = false;
+Coins2:CreateToggle({Name = "Auto Dig"; Flag = "a"; Default = false;
 	Callback = function(Value)
 		Dig = Value
 	end;
@@ -372,7 +472,7 @@ Misc:CreateToggle({Name = "Auto Dig"; Flag = "a"; Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Breakables"; Flag = "ab"; Default = false;
+Coins2:CreateToggle({Name = "Auto Breakables"; Flag = "ab"; Default = false;
 	Callback = function(Value)
 		Breakables = Value
 	end;
@@ -381,7 +481,7 @@ Misc:CreateToggle({Name = "Auto Breakables"; Flag = "ab"; Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Collect"; Flag = "abc"; Default = false;
+Coins2:CreateToggle({Name = "Auto Collect"; Flag = "abc"; Default = false;
 	Callback = function(Value)
 		Collect = Value
 	end;
@@ -390,7 +490,7 @@ Misc:CreateToggle({Name = "Auto Collect"; Flag = "abc"; Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Upgrade"; Flag = "abcd"; Default = false;
+Coins2:CreateToggle({Name = "Auto Upgrade"; Flag = "abcd"; Default = false;
 	Callback = function(Value)
 		Upgrade = Value
 	end;
@@ -399,7 +499,7 @@ Misc:CreateToggle({Name = "Auto Upgrade"; Flag = "abcd"; Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Pet Infinite Speed"; Flag = "abcde"; Default = false;
+Coins2:CreateToggle({Name = "Pet Infinite Speed"; Flag = "abcde"; Default = false;
 	Callback = function(Value)
 		Speedy = Value
 	end;
@@ -408,7 +508,7 @@ Misc:CreateToggle({Name = "Pet Infinite Speed"; Flag = "abcde"; Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Relics"; Flag = "abcdfsdfsdfe"; Default = false;
+Coins2:CreateToggle({Name = "Auto Relics"; Flag = "abcdfsdfsdfe"; Default = false;
 	Callback = function(Value)
 		Relics = Value
 	end;
