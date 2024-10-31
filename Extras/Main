@@ -108,7 +108,7 @@ end
 
 function CodeNest.WalkSpeed(Speed)
     local OldNameCall = nil
-    OldNameCall = hookmetamethod(game, "__index", function(A, B, C)
+    OldNameCall = hookmetamethod(game, "__newindex", function(A, B, C)
         if A and B == "WalkSpeed" then
             return Speed
         end
@@ -129,7 +129,7 @@ end
 function CodeNest.JumpPower(Height)
     local I = CodeNest.JumpPowerHeight()
     local OldNameCall = nil
-    OldNameCall = hookmetamethod(game, "__index", function(A, B, C)
+    OldNameCall = hookmetamethod(game, "__newindex", function(A, B, C)
         if A and B == I then
             return Height
         end
