@@ -310,15 +310,11 @@ RunService.Stepped:connect(function()
 	if Lights then
 		KeyPress(Enum.KeyCode.L)
 	end
-	if NoPunch then
+	if NoPunch and Client.Settings.Time.PunchGuilty ~= 0 then
 		Client.Settings.Time.PunchGuilty = 0
-	elseif not NoPunch then
-		Client.Settings.Time.PunchGuilty = 10
 	end
-	if NoTazeStun then
+	if NoTazeStun and Client.Settings.Time.Stunned ~= 0 then
 		Client.Settings.Time.Stunned = 0
-	elseif not NoTazeStun then
-		Client.Settings.Time.Stunned = 2.5
 	end
 	if LavaFun2 and Workspace:FindFirstChild("LavaFun") and Workspace.LavaFun:FindFirstChild("Lavatouch") then
 		firetouchinterest(Player.Character.HumanoidRootPart, Workspace.LavaFun.Lavatouch, 0)
@@ -330,19 +326,16 @@ RunService.Stepped:connect(function()
 		local LookDirection = Camera.CFrame.LookVector
 		Player.Character.HumanoidRootPart.CFrame = CFrame.new(NewPosition, NewPosition + Vector3.new(LookDirection.X, 0, LookDirection.Z))
     end
-	if TurnSpeed then
+	if TurnSpeed and Client.EditCar().TurnSpeed ~= TurnSpeedV then
 		Client.EditCar("TurnSpeed", TurnSpeedV)
 	end
-	if Suspension then
-		Client.EditCar("Suspension", SuspensionV)
-	end
-	if Height then
+	if Height and Client.EditCar().Height ~= HeightV then
 		Client.EditCar("Height", HeightV)
 	end
-	if GarageBrakes then
+	if GarageBrakes and Client.EditCar().GarageBrakes ~= GarageBrakesV then
 		Client.EditCar("GarageBrakes", GarageBrakesV)
 	end
-	if GarageEngineSpeed then
+	if GarageEngineSpeed and Client.EditCar().GarageEngineSpeed ~= GarageEngineSpeedV then
 		Client.EditCar("GarageEngineSpeed", GarageEngineSpeedV)
 	end
 end)
@@ -359,12 +352,14 @@ local UI = Atlas.new({
     UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
     FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
     CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
-        return inputtedKey=="key1234"
+        return true
     end;
     Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
 })
 local Basic = UI:CreatePage("Basic Features")
 local Misc = Basic:CreateSection("Misc")
+
+local Misc2 = Basic:CreateSection("Misc 2")
 
 local Veh = UI:CreatePage("Vehicle Features")
 local V = Veh:CreateSection("Vehicle")
@@ -409,7 +404,7 @@ spawn(function()
 	end
 end)
 
-Misc:CreateToggle({Name = "Kill Drop NPCS"; Flag = "Asf34345jksdfhjersdhkfjh"; Default = false;
+Misc2:CreateToggle({Name = "Kill Drop NPCS"; Flag = "Asf34345jksdfhjersdhkfjh"; Default = false;
 	Callback = function(Value)
 		KillBoys = Value
 	end;
@@ -418,7 +413,7 @@ Misc:CreateToggle({Name = "Kill Drop NPCS"; Flag = "Asf34345jksdfhjersdhkfjh"; D
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Collect AirDrops"; Flag = "Asf34shdgadhhsahd345jksdfhjersdhkfjh"; Default = false;
+Misc2:CreateToggle({Name = "Collect AirDrops"; Flag = "Asf34shdgadhhsahd345jksdfhjersdhkfjh"; Default = false;
 	Callback = function(Value)
 		CollectAirDropsForMe = Value
 	end;
@@ -426,7 +421,7 @@ Misc:CreateToggle({Name = "Collect AirDrops"; Flag = "Asf34shdgadhhsahd345jksdfh
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
-Misc:CreateToggle({Name = "Auto Escape"; Flag = "Asf34shdgadhhsahd345jksdfhjer4234sdhkfjh"; Default = false;
+Misc2:CreateToggle({Name = "Auto Escape"; Flag = "Asf34shdgadhhsahd345jksdfhjer4234sdhkfjh"; Default = false;
 	Callback = function(Value)
 		Autoespcaue = Value
 	end;
@@ -499,7 +494,7 @@ spawn(function()
 	end
 end)
 
-Misc:CreateToggle({Name = "No AirDrop Cops"; Flag = "Asfjksdfhjsdhkfjh"; Default = false;
+Misc2:CreateToggle({Name = "No AirDrop Cops"; Flag = "Asfjksdfhjsdhkfjh"; Default = false;
 	Callback = function(Value)
 		AntiAirDropCops1 = Value
 	end;
@@ -517,7 +512,7 @@ Misc:CreateToggle({Name = "Anti Taze"; Flag = "A"; Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateToggle({Name = "Auto Open All Doors (Small Lag)"; Flag = "b2342342342344";  Default = false;
+Misc2:CreateToggle({Name = "Auto Open All Doors (Small Lag)"; Flag = "b2342342342344";  Default = false;
 	Callback = function(Value)
 		OpenAllDoorsdoor = Value
 	end;
@@ -533,7 +528,7 @@ Misc:CreateToggle({Name = "Anti Ragdoll"; Flag = "b";  Default = false;
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
-Misc:CreateToggle({Name = "Spam Valcano"; Flag = "d";  Default = false;
+Misc2:CreateToggle({Name = "Spam Valcano"; Flag = "d";  Default = false;
 	Callback = function(Value)
 		LavaFun2 = Value
 	end;
@@ -562,24 +557,14 @@ Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "T
 	CallbackOnCreation = true;
 })
 
+
+
 V:CreateSliderToggle({Name = "TurnSpeed"; SliderFlag = "dfsfsdfsdsfdsfdsdfer"; ToggleFlag = "dfghdsjfgjksdfh";Min = 1;Max = 5;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 		TurnSpeedV = newValue
 	end;
 	ToggleCallback = function(newValue) 
 		TurnSpeed = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-V:CreateSliderToggle({Name = "Suspension"; SliderFlag = "dfssdfsdfsdsfdsfdsdfer"; ToggleFlag = "dfghdssjfgjksdfh";Min = 1;Max = 10;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		SuspensionV = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		Suspension = newValue
 	end;
 	Warning = "This has a warning";
 	WarningIcon = 12345;
