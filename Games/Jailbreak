@@ -52,7 +52,10 @@ local Names = {
 	"InnerModel",
 	"Tile",
 	"Wood",
+	"2_StorageAndMeeting",
 }
+
+
 local WhiteListed = {}
 local Parts = {}
 local Labels = {}
@@ -80,6 +83,9 @@ Client.Teleport = function(CFrame)
 	Player.Character.Humanoid.Health = 0
 	repeat wait() until Player.Character.Humanoid.Health ~= 0 and Player.Character:FindFirstChild("HumanoidRootPart") 
 	Player.Character.HumanoidRootPart.CFrame = CFrame
+end
+Client.GetBank = function()
+    return Workspace.Banks.Bank.Layout:FindFirstChildWhichIsA("Model")
 end
 Client.AutoEscape = function()
     if Player.Team.Name == "Prisoner" or not Player.Character then
@@ -275,12 +281,10 @@ Client.AirDropCollect = function()
 		for i,v in next, v:GetChildren() do
 			if v.Name == "Root" then
 				Client.Teleport(v.CFrame)
-				v.Parent.BriefcasePress:FireServer(true)
-				wait(20)
+				v.Parent.BriefcasePress:FireServer(false)
+				wait(30)
 				v.Parent.BriefcaseRelease:FireServer(true)
-				v.Parent.BriefcaseCollect:FireServer()
-			else
-				
+				v.Parent.BriefcaseCollect:FireServer()				
 			end
 		end
 	end
@@ -297,46 +301,50 @@ local KeyPress = function(Key)
 	end
 end
 
-RunService.Stepped:connect(function()
-	if KillBoys then
-		Client.KillBadGuys()
-	end
-	if Kill then
-		Client.Shoot()
-	end
-	if AlwayCarFlip then
-		KeyPress(Enum.KeyCode.V)
-	end
-	if Lights then
-		KeyPress(Enum.KeyCode.L)
-	end
-	if NoPunch and Client.Settings.Time.PunchGuilty ~= 0 then
-		Client.Settings.Time.PunchGuilty = 0
-	end
-	if NoTazeStun and Client.Settings.Time.Stunned ~= 0 then
-		Client.Settings.Time.Stunned = 0
-	end
-	if LavaFun2 and Workspace:FindFirstChild("LavaFun") and Workspace.LavaFun:FindFirstChild("Lavatouch") then
-		firetouchinterest(Player.Character.HumanoidRootPart, Workspace.LavaFun.Lavatouch, 0)
-	end
-	if WalkSpeed then
-		local New = Camera.CFrame:VectorToWorldSpace(Client.ControlModule:GetMoveVector())
-		local Old = Player.Character.HumanoidRootPart.CFrame.Position
-		local NewPosition = Old + (New * WalkSpeedValue * RunService.Heartbeat:Wait())
-		local LookDirection = Camera.CFrame.LookVector
-		Player.Character.HumanoidRootPart.CFrame = CFrame.new(NewPosition, NewPosition + Vector3.new(LookDirection.X, 0, LookDirection.Z))
-    end
-	if TurnSpeed and Client.EditCar().TurnSpeed ~= TurnSpeedV then
-		Client.EditCar("TurnSpeed", TurnSpeedV)
-	end
-	if Height and Client.EditCar().Height ~= HeightV then
-		Client.EditCar("Height", HeightV)
-	end
-	if GarageBrakes and Client.EditCar().GarageBrakes ~= GarageBrakesV then
-		Client.EditCar("GarageBrakes", GarageBrakesV)
-	end
-	if GarageEngineSpeed and Client.EditCar().GarageEngineSpeed ~= GarageEngineSpeedV then
-		Client.EditCar("GarageEngineSpeed", GarageEngineSpeedV)
+spawn(function()
+	while wait(.2) do
+		pcall(function()
+			if KillBoys then
+				Client.KillBadGuys()
+			end
+			if Kill then
+				Client.Shoot()
+			end
+			if AlwayCarFlip then
+				KeyPress(Enum.KeyCode.V)
+			end
+			if Lights then
+				KeyPress(Enum.KeyCode.L)
+			end
+			if NoPunch and Client.Settings.Time.PunchGuilty ~= 0 then
+				Client.Settings.Time.PunchGuilty = 0
+			end
+			if NoTazeStun and Client.Settings.Time.Stunned ~= 0 then
+				Client.Settings.Time.Stunned = 0
+			end
+			if LavaFun2 and Workspace:FindFirstChild("LavaFun") and Workspace.LavaFun:FindFirstChild("Lavatouch") then
+				firetouchinterest(Player.Character.HumanoidRootPart, Workspace.LavaFun.Lavatouch, 0)
+			end
+			if WalkSpeed then
+				local New = Camera.CFrame:VectorToWorldSpace(Client.ControlModule:GetMoveVector())
+				local Old = Player.Character.HumanoidRootPart.CFrame.Position
+				local NewPosition = Old + (New * WalkSpeedValue * RunService.Heartbeat:Wait())
+				local LookDirection = Camera.CFrame.LookVector
+				Player.Character.HumanoidRootPart.CFrame = CFrame.new(NewPosition, NewPosition + Vector3.new(LookDirection.X, 0, LookDirection.Z))
+			end
+			if TurnSpeed and Client.EditCar().TurnSpeed ~= TurnSpeedV then
+				Client.EditCar("TurnSpeed", TurnSpeedV)
+			end
+			if Height and Client.EditCar().Height ~= HeightV then
+				Client.EditCar("Height", HeightV)
+			end
+			if GarageBrakes and Client.EditCar().GarageBrakes ~= GarageBrakesV then
+				Client.EditCar("GarageBrakes", GarageBrakesV)
+			end
+			if GarageEngineSpeed and Client.EditCar().GarageEngineSpeed ~= GarageEngineSpeedV then
+				Client.EditCar("GarageEngineSpeed", GarageEngineSpeedV)
+			end
+		end)
 	end
 end)
 
