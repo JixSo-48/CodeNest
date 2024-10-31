@@ -26,7 +26,7 @@ function CodeNest.GetPlayers()
 end
 
 function CodeNest.Mag(P1, P2)
-    return (P1.Position - P2.Position).Mag
+    return (P1.Position - P2.Position).magnitude
 end
 
 function CodeNest.WalkTo(Position)
