@@ -64,11 +64,12 @@ end
 
 function CodeNest.ServerHop()
     spawn(function()
-        while wait() do
+        while wait(4) do
             local Gay = Global.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. game.PlaceId .. '/servers/Public?sortOrder=Asc&limit=100'))
             for i,v in next, Gay.data do
                 if v.playing and v.playing < v.maxPlayers then
                     Global.TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
+                    break
                 end
             end
         end
