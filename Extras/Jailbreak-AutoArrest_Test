@@ -1,0 +1,275 @@
+
+local G = getgenv and getgenv()
+if G then
+    G.print = print
+    G.error = error
+    G.warn = warn
+end
+local Services = setmetatable({}, {__index = function(Self, Idx) return game:GetService(Idx) end})
+local ReplicatedStorage = Services.ReplicatedStorage
+local Players = Services.Players
+local RunService = Services.RunService
+local Workspace = Services.Workspace
+local CoreGui = Services.CoreGui
+local Camera = Workspace.CurrentCamera
+local Player = Players.LocalPlayer
+local Client = {
+	DartDispenser = require(ReplicatedStorage.Game.DartDispenser.DartDispenser),
+	MilitaryTurret = require(ReplicatedStorage.Game.MilitaryTurret.MilitaryTurret),
+	Turret = require(ReplicatedStorage.Turret2.Turret),
+	Settings = require(ReplicatedStorage.Resource.Settings),
+	PlayerUtils = require(ReplicatedStorage.Game.PlayerUtils),
+	InventoryItemSystem = require(ReplicatedStorage.Inventory.InventoryItemSystem),
+	TagUtils = require(ReplicatedStorage.Tag.TagUtils),
+	ControlModule = require(Player.PlayerScripts.PlayerModule.ControlModule),
+	RobberyConsts = require(ReplicatedStorage.Robbery.RobberyConsts),
+    VehicleUtils = require(ReplicatedStorage.Vehicle.VehicleUtils),
+	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
+	ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
+	Gun = require(ReplicatedStorage.Game.Item.Gun),
+	GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
+	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
+    UI = require(ReplicatedStorage.Module.UI),
+	Doors = {},
+	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
+}
+local PlayersTable = {}
+local Drops = {}
+local Names = {
+	"Camera",
+	"Laser",
+	"Lasers",
+	"Spikes",
+	"LavaKill",
+	"BarbedWire",
+	"Piston",
+	"PowerWire",
+	"LaserGround",
+	"1_Classic",
+	"LaserWall",
+	"LaserCarousel",
+	"Spotlight",
+	"Darts", 
+	"Plank",
+	"InnerModel",
+	"Tile",
+	"Wood",
+	"2_StorageAndMeeting",
+}
+local fakeSniper = {
+	Local = true,
+	IgnoreList = {},
+	Config = {},
+	Maid = require(ReplicatedStorage.Std.Maid).new(),
+	__ClassName = "Sniper"
+}
+
+require(ReplicatedStorage.Game.Item.Gun).SetupBulletEmitter(fakeSniper)
+if Player.PlayerGui:FindFirstChild("TeamSelectGui") then
+    for i,v in next, getconnections(Player.PlayerGui.TeamSelectGui.TeamSelect.Frame.MiddleContainer.TeamsContainer.ImagesContainer.PoliceTeam.Activated) do
+        v.Function()
+    end
+end
+local WhiteListed = {}
+local Parts = {}
+local Labels = {}
+local OldScript = OldScript or require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
+for i,v in next, getgc(true) do
+    if type(v) == "table" then
+        if rawget(v, "FireServer") then
+            Client.Network = v
+        elseif rawget(v, "GetLocalVehiclePacket") then
+			Client.GetLocalVehiclePacket = v.GetLocalVehiclePacket
+		end
+	elseif typeof(v) == 'function' and islclosure(v) then
+        if table.find(getconstants(v), 'SequenceRequireState') then
+            Client.Door = v
+		elseif getinfo(v).name:find("Cheat") then
+			hookfunction(v, function() return end)
+        end
+        if getfenv(v).script == Player.PlayerScripts.LocalScript then
+            if getinfo(v).name:find("cuff") then
+                Client.Arresta = v
+            end
+        end
+    end
+end
+
+Client.Teleport = function(CF)
+	Player.Character.Humanoid.Health = 0
+	Player.CharacterAdded:Wait() wait()
+    for i=1, 5 do wait()
+	    Player.Character:MoveTo(CF.Position)
+    end
+end
+
+local Old = Client.TagUtils.isPointInTag
+Client.TagUtils.isPointInTag = function(Args1, Args2)
+    return true
+end
+
+Client.isUnderRoof = function(Part)
+    local Rain = Workspace:FindFirstChild("Rain")
+    local Vehicles = Workspace:FindFirstChild("Vehicles")
+    if Rain then
+        Core = {Part.Parent, Vehicles, Rain}
+    else
+        Core = {Part.Parent, Vehicles}
+    end
+    local RaycastParams = RaycastParams.new()
+    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    RaycastParams.FilterDescendantsInstances = Core
+    local Raycast = Workspace:Raycast(Part.Position, Vector3.new(0, 1, 0) * 100, RaycastParams)
+    if Raycast then
+        return true
+    end
+    return false
+end
+local Yes = function(v)
+	if v:IsA("TouchTransmitter") then
+		if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
+			if v.Parent:IsA("BasePart") then
+				sethiddenproperty(v.Parent, "CanTouch", false)
+			end
+		end
+	end
+end
+for i,v in next, game:GetDescendants() do
+	Yes(v)
+end
+game.DescendantAdded:Connect(function(v)
+	Yes(v)
+end)
+local CheckTeam = function()
+	local Team = tostring(Player.Team)
+ 	if Team then
+		if Team == "Criminal" then
+			return "Police"
+		elseif Team == "Police" then
+			return "Criminal"
+		elseif Team == "Prisoner" then
+			return "Police"
+		end
+	end
+end
+wait(5)
+print("Loading...")
+local GetClosestTargetOnOtherTeam = function()
+    local ClosestPlayer = nil
+    local ClosestDistance = math.huge
+    for _, V in next, Players:GetPlayers() do
+        if V ~= Player then
+			if tostring(V.Team) == CheckTeam() or
+             Arrest and V.Team.Name == "Criminal"
+              and not V.Folder:FindFirstChild("Cuffed") and not Client.isUnderRoof(V.Character.Humanoid.RootPart) then
+				if V.Character and V.Character:FindFirstChild("HumanoidRootPart") and V.Character.Humanoid.Health ~= 0 and not table.find(WhiteListed, V.Name) and Player.Character.Humanoid.Health ~= 0 then
+					local Distance = (Player.Character.HumanoidRootPart.Position - V.Character.HumanoidRootPart.Position).magnitude
+					if Distance < ClosestDistance then
+						ClosestDistance = Distance
+						ClosestPlayer = V
+					end
+				end
+			end
+		end
+    end
+    if ClosestPlayer then
+        return ClosestPlayer
+    end
+end
+
+Client.Eject = function()
+    for i,v in next, Client.UI.CircleAction.Specs do
+        if v.Name == "Eject" and Client.Main.Mag(v.Part, Player.Character.Humanoid.RootPart) < 5 then
+            v:Callback(true)
+        end
+    end
+end
+
+
+Client.Arrest = function(v)
+    for i,v in next, Client.UI.CircleAction.Specs do
+        if v.Name == "Arrest" and Client.Main.Mag(v.Part, Player.Character.Humanoid.RootPart) < 20 then
+            v:Callback(true)
+        end
+    end
+end
+
+Client.GetClosestVehicle = function()
+	local Target = nil
+	local Huge = math.huge
+	for _, v in pairs(workspace.Vehicles:GetChildren()) do
+		if v:IsA('Model') then
+			local Mag = Client.Main.Mag(GetClosestTargetOnOtherTeam().Character.PrimaryPart, v.PrimaryPart)
+			if Mag < Huge then
+				Target = v
+				Huge = Mag
+			end
+		end
+	end
+	if Target then return Target end
+end
+
+Client.ServerHop = function()
+    spawn(function()
+        while wait(4) do
+            local Gay = Services.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. game.PlaceId .. '/servers/Public?sortOrder=Asc&limit=100'))
+            for i,v in next, Gay.data do
+                if v.playing and v.playing < v.maxPlayers and v.playing > 10 then
+                    Services.TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
+                    break
+                end
+            end
+        end
+    end)    
+end
+
+spawn(function()
+    while wait(.2) and Arrest do
+        pcall(function()
+            if Client.GetClosestVehicle() then
+                fakeSniper.BulletEmitter.OnHitSurface:Fire(Client.GetClosestVehicle().PrimaryPart, Client.GetClosestVehicle().PrimaryPart.Position, Client.GetClosestVehicle().PrimaryPart.Position)
+            end
+        end)
+    end
+end)
+
+Tween = function(Object1)
+    if Object1 and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        local Timing = Client.Main.Mag(Player.Character.HumanoidRootPart, Object1) / 100
+        local TweenInfo = TweenInfo.new(Timing, Enum.EasingStyle.Linear)
+        local TweenSystem = Services.TweenService:Create(Player.Character.HumanoidRootPart, TweenInfo, {CFrame = Object1.CFrame})
+        TweenSystem:Play()
+    end
+end
+
+
+spawn(function()
+    while Arrest and wait() do
+        pcall(function()
+            local Rock = GetClosestTargetOnOtherTeam()
+            if Arrest and Rock and Rock.Character and Player.Character:FindFirstChild("HumanoidRootPart") and not Rock.Folder:FindFirstChild("Cuffed") then
+                Player.Character.Humanoid.Health = 0
+                Player.CharacterAdded:Wait() wait()
+                for i=1, 5 do wait()
+                    Player.Character.Humanoid.RootPart.CFrame = Rock.Character.Humanoid.RootPart.CFrame
+                end
+                local Equip = Client.ItemSystem.GetLocalEquipped()
+                if not Equip then
+                    Player.Folder.Handcuffs.InventoryEquipRemote:FireServer(true)
+                end
+                repeat wait()
+                    if Rock.Folder:FindFirstChild("Cuffed") then break end
+                    if Client.Main.Mag(Player.Character.HumanoidRootPart, Rock.Character.Humanoid.RootPart) >= 500 then
+                        return
+                    end
+                    Tween(Rock.Character.Humanoid.RootPart)
+                    Client.Eject()
+                    Client.Arrest()
+                until Rock.Folder:FindFirstChild("Cuffed") or not Arrest
+
+            elseif not Rock then
+                Client.ServerHop()
+            end
+        end)
+    end
+end)
