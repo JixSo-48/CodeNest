@@ -1,61 +1,31 @@
 
-local G = getgenv and getgenv()
-if G then
-    G.print = print
-    G.error = error
-    G.warn = warn
-end
-local Services = setmetatable({}, {__index = function(Self, Idx) return game:GetService(Idx) end})
+repeat wait() until game:IsLoaded()
+
+local wait = task.wait
+local spawn = task.spawn
+local Services = setmetatable({}, {__index = function(Self, Idx)
+    return game:GetService(Idx)
+end})
+
 local ReplicatedStorage = Services.ReplicatedStorage
 local Players = Services.Players
 local RunService = Services.RunService
 local Workspace = Services.Workspace
+local Teams = Services.Teams
 local CoreGui = Services.CoreGui
+local PathfindingService = Services.PathfindingService
 local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
+
 local Client = {
-	DartDispenser = require(ReplicatedStorage.Game.DartDispenser.DartDispenser),
-	MilitaryTurret = require(ReplicatedStorage.Game.MilitaryTurret.MilitaryTurret),
-	Turret = require(ReplicatedStorage.Turret2.Turret),
-	Settings = require(ReplicatedStorage.Resource.Settings),
-	PlayerUtils = require(ReplicatedStorage.Game.PlayerUtils),
-	InventoryItemSystem = require(ReplicatedStorage.Inventory.InventoryItemSystem),
 	TagUtils = require(ReplicatedStorage.Tag.TagUtils),
-	ControlModule = require(Player.PlayerScripts.PlayerModule.ControlModule),
-	RobberyConsts = require(ReplicatedStorage.Robbery.RobberyConsts),
-    VehicleUtils = require(ReplicatedStorage.Vehicle.VehicleUtils),
-	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
 	ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
 	Gun = require(ReplicatedStorage.Game.Item.Gun),
-	GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
 	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
     UI = require(ReplicatedStorage.Module.UI),
-	Doors = {},
 	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
 }
-local PlayersTable = {}
-local Drops = {}
-local Names = {
-	"Camera",
-	"Laser",
-	"Lasers",
-	"Spikes",
-	"LavaKill",
-	"BarbedWire",
-	"Piston",
-	"PowerWire",
-	"LaserGround",
-	"1_Classic",
-	"LaserWall",
-	"LaserCarousel",
-	"Spotlight",
-	"Darts", 
-	"Plank",
-	"InnerModel",
-	"Tile",
-	"Wood",
-	"2_StorageAndMeeting",
-}
+
 local fakeSniper = {
 	Local = true,
 	IgnoreList = {},
@@ -63,132 +33,44 @@ local fakeSniper = {
 	Maid = require(ReplicatedStorage.Std.Maid).new(),
 	__ClassName = "Sniper"
 }
-
-require(ReplicatedStorage.Game.Item.Gun).SetupBulletEmitter(fakeSniper)
+local List = {
+    "Guest", 
+    "Member"
+}
+for i,v in next, getgc(true) do
+    if typeof(v) == 'function' and islclosure(v) then
+		if getinfo(v).name:find("Cheat") then
+			hookfunction(v, function() return end)
+        end
+    end
+end
+for i,v in next, Workspace.Vehicles:GetChildren() do
+    Player:RequestStreamAroundAsync(v:GetModelCFrame().Position, 75)
+end
 if Player.PlayerGui:FindFirstChild("TeamSelectGui") then
     for i,v in next, getconnections(Player.PlayerGui.TeamSelectGui.TeamSelect.Frame.MiddleContainer.TeamsContainer.ImagesContainer.PoliceTeam.Activated) do
         v.Function()
     end
 end
-local WhiteListed = {}
-local Parts = {}
-local Labels = {}
-local OldScript = OldScript or require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
-for i,v in next, getgc(true) do
-    if type(v) == "table" then
-        if rawget(v, "FireServer") then
-            Client.Network = v
-        elseif rawget(v, "GetLocalVehiclePacket") then
-			Client.GetLocalVehiclePacket = v.GetLocalVehiclePacket
-		end
-	elseif typeof(v) == 'function' and islclosure(v) then
-        if table.find(getconstants(v), 'SequenceRequireState') then
-            Client.Door = v
-		elseif getinfo(v).name:find("Cheat") then
-			hookfunction(v, function() return end)
-        end
-        if getfenv(v).script == Player.PlayerScripts.LocalScript then
-            if getinfo(v).name:find("cuff") then
-                Client.Arresta = v
-            end
-        end
-    end
-end
-
-Client.Teleport = function(CF)
-	Player.Character.Humanoid.Health = 0
-	Player.CharacterAdded:Wait() wait()
-    for i=1, 5 do wait()
-	    Player.Character:MoveTo(CF.Position)
-    end
-end
-
-local Old = Client.TagUtils.isPointInTag
 Client.TagUtils.isPointInTag = function(Args1, Args2)
     return true
 end
 
-Client.isUnderRoof = function(Part)
-    local Rain = Workspace:FindFirstChild("Rain")
-    local Vehicles = Workspace:FindFirstChild("Vehicles")
-    if Rain then
-        Core = {Part.Parent, Vehicles, Rain}
-    else
-        Core = {Part.Parent, Vehicles}
-    end
-    local RaycastParams = RaycastParams.new()
-    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-    RaycastParams.FilterDescendantsInstances = Core
-    local Raycast = Workspace:Raycast(Part.Position, Vector3.new(0, 1, 0) * 100, RaycastParams)
-    if Raycast then
-        return true
-    end
-    return false
-end
-local Yes = function(v)
-	if v:IsA("TouchTransmitter") then
-		if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
-			if v.Parent:IsA("BasePart") then
-				sethiddenproperty(v.Parent, "CanTouch", false)
-			end
-		end
-	end
-end
-for i,v in next, game:GetDescendants() do
-	Yes(v)
-end
-game.DescendantAdded:Connect(function(v)
-	Yes(v)
-end)
-local CheckTeam = function()
-	local Team = tostring(Player.Team)
- 	if Team then
-		if Team == "Criminal" then
-			return "Police"
-		elseif Team == "Police" then
-			return "Criminal"
-		elseif Team == "Prisoner" then
-			return "Police"
-		end
-	end
-end
-wait(5)
 print("Loading...")
-local GetClosestTargetOnOtherTeam = function()
-    local ClosestPlayer = nil
-    local ClosestDistance = math.huge
-    for _, V in next, Players:GetPlayers() do
-        if V ~= Player then
-			if tostring(V.Team) == CheckTeam() or
-             Arrest and V.Team.Name == "Criminal"
-              and not V.Folder:FindFirstChild("Cuffed") and not Client.isUnderRoof(V.Character.Humanoid.RootPart) then
-				if V.Character and V.Character:FindFirstChild("HumanoidRootPart") and V.Character.Humanoid.Health ~= 0 and not table.find(WhiteListed, V.Name) and Player.Character.Humanoid.Health ~= 0 then
-					local Distance = (Player.Character.HumanoidRootPart.Position - V.Character.HumanoidRootPart.Position).magnitude
-					if Distance < ClosestDistance then
-						ClosestDistance = Distance
-						ClosestPlayer = V
-					end
-				end
-			end
-		end
-    end
-    if ClosestPlayer then
-        return ClosestPlayer
-    end
-end
-
+-------------------------------------------------------------------
 Client.Eject = function()
     for i,v in next, Client.UI.CircleAction.Specs do
-        if v.Name == "Eject" and Client.Main.Mag(v.Part, Player.Character.Humanoid.RootPart) < 5 then
+        if v.Name == "Eject" and Client.Main.Mag(v.Part, Player.Character.Humanoid.RootPart) < 20 then
+            v:Callback(false)
             v:Callback(true)
         end
     end
 end
 
-
 Client.Arrest = function(v)
     for i,v in next, Client.UI.CircleAction.Specs do
         if v.Name == "Arrest" and Client.Main.Mag(v.Part, Player.Character.Humanoid.RootPart) < 20 then
+            v:Callback()
             v:Callback(true)
         end
     end
@@ -197,9 +79,9 @@ end
 Client.GetClosestVehicle = function()
 	local Target = nil
 	local Huge = math.huge
-	for _, v in pairs(workspace.Vehicles:GetChildren()) do
+	for _, v in next, Workspace.Vehicles:GetChildren() do
 		if v:IsA('Model') then
-			local Mag = Client.Main.Mag(GetClosestTargetOnOtherTeam().Character.PrimaryPart, v.PrimaryPart)
+			local Mag = Client.Main.Mag(Player.Character.PrimaryPart, v.PrimaryPart)
 			if Mag < Huge then
 				Target = v
 				Huge = Mag
@@ -210,21 +92,174 @@ Client.GetClosestVehicle = function()
 end
 
 Client.ServerHop = function()
-    spawn(function()
-        while wait(4) do
-            local Gay = Services.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. game.PlaceId .. '/servers/Public?sortOrder=Asc&limit=100'))
-            for i,v in next, Gay.data do
-                if v.playing and v.playing < v.maxPlayers and v.playing > 10 then
-                    Services.TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
-                    break
+    local Nig = request({Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true", game.PlaceId)})
+    local Server = nil
+    local Gay = Services.HttpService:JSONDecode(Nig.Body)
+    repeat wait()
+        for i,v in next, Gay.data do
+            local Playing = tonumber(v.playing)
+            local Maxing = tonumber(v.maxPlayers)
+            if Playing > 20 and Playing < Maxing and Playing < 25 then
+                Server = v.id
+                print(Server)
+                break
+            end
+        end
+    until Server
+    Services.TeleportService:TeleportToPlaceInstance(game.PlaceId, tostring(Server))
+end
+
+Client.CreatePath = function(Model, Position, Table)
+    if Model and Position and Table then
+        local Travel = PathfindingService:CreatePath(Table or {}) -- Telling the computer what we want in a table descriped below
+        local Success, Error = pcall(function()
+            Travel:ComputeAsync(Model.PrimaryPart.Position, Position) -- this basically just put in two positions and it makes a table with waypoints
+        end)
+        if Travel.Status == Enum.PathStatus.Success and Success then
+            return true
+        else
+            return false
+        end
+    end
+end
+
+Client.Respawn = function()
+    Player.Character.Humanoid.Health = 1
+    Player.Character.Head:Destroy()
+    Player.Character.Humanoid.Died:Wait()
+    Player.CharacterAdded:Wait()
+end
+
+Client.Tween = function(Object1)
+    if Object1 and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        local Path = Client.CreatePath(Player.Character, Object1.Position, {})
+        if Path then
+            local Timing = Client.Main.Mag(Player.Character.HumanoidRootPart, Object1) / 100
+            local TweenInfo = TweenInfo.new(Timing, Enum.EasingStyle.Linear)
+            local TweenSystem = Services.TweenService:Create(Player.Character.HumanoidRootPart, TweenInfo, {CFrame = Object1.CFrame})
+            TweenSystem:Play()
+        else
+            Client.Respawn()
+            for i=1,5 do wait()
+                Player.Character:MoveTo(Object1.Position)
+            end
+        end
+    end
+end
+
+Client.GetBounty = function()
+    local Bountys = {}
+    for i,v in next, Workspace.MostWanted:GetChildren() do
+        if v:FindFirstChild("Background") then
+            for i,v in next, v.Background.MostWanted.Board:GetChildren() do
+                if v:IsA("Frame") and v:FindFirstChild("Stats") and v.Stats:FindFirstChild("Bounty") then
+                    local Bounty = string.split(v.Stats.Bounty.Text, " ")[1]
+                    local Bounty2 = string.gsub(Bounty, ",", "")
+                    local Bounty3 = string.gsub(Bounty2, "%$", "")
+                    if tonumber(Bounty3) >= Arrest.MinBounty then
+                        for i,v2 in next, Players:GetPlayers() do
+                            if v2.Character and v2.Character:FindFirstChild("Humanoid") and v2.Character.Humanoid.Health > 0 and not v2.Folder:FindFirstChild("Cuffed") then
+                                if v2.Character and v2.Character.Humanoid.RootPart then
+                                    if v2.Name == v.Stats.PlayerName.Text or v2.DisplayName == v.Stats.PlayerName.Text then
+                                        return v2
+                                    end
+                                end
+                            end
+                        end
+                    end
                 end
             end
         end
-    end)    
+    end
+    return false
 end
 
+Client.AutoArrest = function()
+    local v = Client.GetBounty()
+    if not v then return end
+    Client.Respawn()
+    for i=1, 5 do wait()
+        Player.Character:MoveTo(v.Character.Humanoid.RootPart.Position)
+    end
+    repeat 
+        local Equip = Client.ItemSystem.GetLocalEquipped()
+        if not Equip and Player.Folder:FindFirstChild("Handcuffs") and Player.Folder.Handcuffs:FindFirstChild("InventoryEquipRemote") then
+            Player.Folder.Handcuffs.InventoryEquipRemote:FireServer(true)
+        end
+        if v.Folder:FindFirstChild("Cuffed") then
+            return print("Arrested")
+        end
+        if Client.Main.Mag(Player.Character:GetModelCFrame(), v.Character:GetModelCFrame()) >= 300 then
+            return print("Too Far")
+        end
+        if Client.Main.Mag(Player.Character:GetModelCFrame(), v.Character:GetModelCFrame()) >= 5 then
+            Client.Tween(v.Character.Humanoid.RootPart)
+            print("Tweening")
+        end
+        if Client.Main.Mag(Player.Character:GetModelCFrame(), v.Character:GetModelCFrame()) <= 20 then
+            Client.Eject()
+            Client.Arrest()
+        end
+        wait()
+    until v.Folder:FindFirstChild("Cuffed") or not Arrest
+end
+
+Client.Role = function(i, v)
+    return i:GetRoleInGroup(v)
+end
+
+Client.Gun.SetupBulletEmitter(fakeSniper)
+
+print("Functions Loaded..")
+-------------------------------------------------------------------
+--- Loops
+local A, B = pcall(function()
+    for i,v in next, Players:GetPlayers() do
+        if not table.find(List, tostring(Client.Role(v, 3059674))) then
+            Client.ServerHop()
+        end
+    end
+    Players.PlayerAdded:connect(function(v)
+        if not table.find(List, tostring(Client.Role(v, 3059674))) then
+            Client.ServerHop()
+        end
+    end)
+end)
+
+if not A then
+    Client.ServerHop()
+end
+
+RunService.Stepped:Connect(function()
+    for i,v in next, Workspace.Vehicles:GetChildren() do
+        Player:RequestStreamAroundAsync(v:GetModelCFrame().Position, 75)
+    end
+end)
+
 spawn(function()
-    while wait(.2) and Arrest do
+    while wait(4) and Arrest do
+        local A, B = pcall(function()
+            if not Client.GetBounty() then
+                Client.ServerHop()
+            end
+        end)
+        if not A then
+            print(B)
+        end
+    end
+end)
+
+spawn(function()
+    while wait() and Arrest do
+        A, B = pcall(Client.AutoArrest)
+        if not A then
+            print(B)
+        end
+    end
+end)
+
+spawn(function()
+    while wait(.3) and Arrest do
         pcall(function()
             if Client.GetClosestVehicle() then
                 fakeSniper.BulletEmitter.OnHitSurface:Fire(Client.GetClosestVehicle().PrimaryPart, Client.GetClosestVehicle().PrimaryPart.Position, Client.GetClosestVehicle().PrimaryPart.Position)
@@ -233,43 +268,5 @@ spawn(function()
     end
 end)
 
-Tween = function(Object1)
-    if Object1 and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-        local Timing = Client.Main.Mag(Player.Character.HumanoidRootPart, Object1) / 100
-        local TweenInfo = TweenInfo.new(Timing, Enum.EasingStyle.Linear)
-        local TweenSystem = Services.TweenService:Create(Player.Character.HumanoidRootPart, TweenInfo, {CFrame = Object1.CFrame})
-        TweenSystem:Play()
-    end
-end
+print("Loops Loaded...")
 
-
-spawn(function()
-    while Arrest and wait() do
-        pcall(function()
-            local Rock = GetClosestTargetOnOtherTeam()
-            if Arrest and Rock and Rock.Character and Player.Character:FindFirstChild("HumanoidRootPart") and not Rock.Folder:FindFirstChild("Cuffed") then
-                Player.Character.Humanoid.Health = 0
-                Player.CharacterAdded:Wait() wait()
-                for i=1, 5 do wait()
-                    Player.Character.Humanoid.RootPart.CFrame = Rock.Character.Humanoid.RootPart.CFrame
-                end
-                local Equip = Client.ItemSystem.GetLocalEquipped()
-                if not Equip then
-                    Player.Folder.Handcuffs.InventoryEquipRemote:FireServer(true)
-                end
-                repeat wait()
-                    if Rock.Folder:FindFirstChild("Cuffed") then break end
-                    if Client.Main.Mag(Player.Character.HumanoidRootPart, Rock.Character.Humanoid.RootPart) >= 500 then
-                        return
-                    end
-                    Tween(Rock.Character.Humanoid.RootPart)
-                    Client.Eject()
-                    Client.Arrest()
-                until Rock.Folder:FindFirstChild("Cuffed") or not Arrest
-
-            elseif not Rock then
-                Client.ServerHop()
-            end
-        end)
-    end
-end)
