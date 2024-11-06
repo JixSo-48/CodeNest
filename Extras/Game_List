@@ -1,1 +1,7 @@
-
+local Games = {
+    [245662005] = "https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Games/Jailbreak",
+    [65241] = "https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Games/Natural-Disaster-Survival",
+    [3317771874] = "https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Games/Pet-Simulator-99",
+    [6401952734] = "https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Games/Pets-Go"
+}
+return Games
