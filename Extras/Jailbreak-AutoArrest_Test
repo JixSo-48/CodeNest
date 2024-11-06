@@ -1,4 +1,3 @@
-
 if not game.Loaded then
     game.Loaded:Wait()
     task.wait(3)
@@ -99,13 +98,17 @@ Client.ServerHop = function()
     local Server = nil
     local Gay = Services.HttpService:JSONDecode(Nig.Body)
     repeat wait()
-        for i,v in next, Gay.data do
-            local Playing = tonumber(v.playing)
-            local Maxing = tonumber(v.maxPlayers)
-            if Playing > 20 and Playing < Maxing and Playing < 25 then
-                Server = v.id
-                print(Server)
-                break
+        if not Gay then
+            Gay = Services.HttpService:JSONDecode(Nig.Body)
+        else
+            for i,v in next, Gay.data do
+                local Playing = tonumber(v.playing)
+                local Maxing = tonumber(v.maxPlayers)
+                if Playing > 20 and Playing < Maxing and Playing < 25 then
+                    Server = v.id
+                    print(Server)
+                    break
+                end
             end
         end
     until Server
