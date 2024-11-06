@@ -42,7 +42,8 @@ local Client = {
     List = {
         "Guest", 
         "Member"
-    }
+    },
+    Parts = {}
 }
 
 for i,v in next, getgc(true) do
@@ -52,14 +53,23 @@ for i,v in next, getgc(true) do
         end
     end
 end
-for i,v in next, Workspace.Vehicles:GetChildren() do
-    Player:RequestStreamAroundAsync(v:GetModelCFrame().Position, 75)
+
+for i,v in next, require(game:GetService("ReplicatedStorage").GameAnalytics.GameAnalytics.Postie) do
+    hookfunction(v, function() return wait(9e9) end)
 end
+
+for i,v in next, Workspace:GetDescendants() do
+    if v.Name == "Region" then
+        table.insert(Client.Parts, v)
+    end
+end
+
 if Player.PlayerGui:FindFirstChild("TeamSelectGui") then
     for i,v in next, getconnections(Player.PlayerGui.TeamSelectGui.TeamSelect.Frame.MiddleContainer.TeamsContainer.ImagesContainer.PoliceTeam.Activated) do
         v.Function()
     end
 end
+
 Client.TagUtils.isPointInTag = function(Args1, Args2)
     return true
 end
@@ -230,11 +240,11 @@ print("Functions Loaded..")
 --- Loops
 
 RunService.Stepped:Connect(function()
-    for i,v in next, Workspace.Vehicles:GetChildren() do
+    for i,v in next, Client.Parts do
         Player:RequestStreamAroundAsync(v:GetModelCFrame().Position, 75)
     end
 end)
-
+wait(5)
 spawn(function()
     while wait(4) and Arrest do
         local A, B = pcall(function()
