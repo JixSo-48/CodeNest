@@ -1,3 +1,4 @@
+
 math.randomseed(tick())
 local Services = setmetatable({}, {__index = function(Self, Index)
 	return game:GetService(Index)
@@ -91,12 +92,6 @@ Client.Vending = function()
 	end
 	Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
 end
-local args = {
-    [1] = "StandardMerchant",
-    [2] = 2
-}
-
-game:GetService("ReplicatedStorage"):WaitForChild("Network"):WaitForChild("CustomMerchants_Purchase"):InvokeServer(unpack(args))
 
 Client.GrabFruits = function()
 	for i,v in next, Client.Break:GetChildren() do
@@ -240,7 +235,7 @@ RunService.Heartbeat:Connect(function()
 end)
 spawn(function()
 	while wait(5) do
-		pcall(function()
+        local A, B = pcall(function()
 			if Mer then
 				Client.Merchant()
 			end
@@ -251,40 +246,52 @@ spawn(function()
 				Client.AutoCraft()
 			end
 		end)
+        if not A then
+            print(B)
+        end
 	end
 end)
 spawn(function()
-	while wait() do
-		if Gifts then
-			Client.CollectGift()
-		end
-		if Vending then
-			Client.Vending()
-		end
-		if GrabFruits then
-			Client.GrabFruits()
-		end
-		if Roll then
-			Client.Roll()
-		end
-		if Potion then
-			Client.Potion()
-		end
-		if Dig then
-			Client.Dig()
-		end
-		if Collect then
-			Client.Collect()
-		end
-		if Breakables then
-			Client.settarget(Client.Nearest())
-		end
-		if Fruit then
-			Client.Fruit()
-		end
-		if Relics then
-			Client.CollectRelics()
-		end
+	while wait(.5) do
+        local Script, Error = pcall(function()
+            Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
+            if Roll2 then
+                Client.InvokeServer("Bonus Rolls: Claim", {})
+            end
+            if Gifts then
+                Client.CollectGift()
+            end
+            if Vending then
+                Client.Vending()
+            end
+            if GrabFruits then
+                Client.GrabFruits()
+            end
+            if Roll then
+                Client.Roll()
+            end
+            if Potion then
+                Client.Potion()
+            end
+            if Dig then
+                Client.Dig()
+            end
+            if Collect then
+                Client.Collect()
+            end
+            if Breakables then
+                Client.settarget(Client.Nearest())
+            end
+            if Fruit then
+                Client.Fruit()
+            end
+            if Relics then
+                Client.CollectRelics()
+            end
+        end)
+        if not Script then
+            warn(Error)
+        end
 	end
 end)
 Client.AntiAFK()
@@ -410,6 +417,15 @@ AutoRoll2:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = 
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
+AutoRoll2:CreateToggle({Name = "Auto Claim Bonus Roll"; Flag = "asdfsdfdfdsdfdsf"; Default = false;
+	Callback = function(Value)
+		Roll2 = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
 Merchant2:CreateToggle({Name = "Auto Grab Merchant Buyable items"; Flag = "asdffsdfdasdhgfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Mer = Value
