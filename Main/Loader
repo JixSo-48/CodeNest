@@ -1,0 +1,16 @@
+if not game.Loaded then
+	game.Loaded:Wait()
+	task.wait(3)
+end
+local Games = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Game_List", true))()
+
+local A, B = pcall(function()
+    for i,v in next, Games do
+        if game.GameId == i then
+            loadstring(game:HttpGetAsync(v, true))()
+        end
+    end
+end)
+if not A then
+    print(B)
+end
