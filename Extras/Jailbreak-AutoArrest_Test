@@ -1,3 +1,9 @@
+
+getgenv().Arrest = {
+	MinBounty = 2500,
+	Enabled = true
+}
+
 if not game.Loaded then
     game.Loaded:Wait()
     task.wait(3)
@@ -222,22 +228,6 @@ Client.Gun.SetupBulletEmitter(Client.Sniper)
 print("Functions Loaded..")
 -------------------------------------------------------------------
 --- Loops
-local A, B = pcall(function()
-    for i,v in next, Players:GetPlayers() do
-        if not table.find(Client.List, tostring(Client.Role(v, 3059674))) then
-            Client.ServerHop()
-        end
-    end
-    Players.PlayerAdded:connect(function(v)
-        if not table.find(Client.List, tostring(Client.Role(v, 3059674))) then
-            Client.ServerHop()
-        end
-    end)
-end)
-
-if not A then
-    Client.ServerHop()
-end
 
 RunService.Stepped:Connect(function()
     for i,v in next, Workspace.Vehicles:GetChildren() do
@@ -272,6 +262,11 @@ spawn(function()
         pcall(function()
             if Client.GetClosestVehicle() then
                 Client.Sniper.BulletEmitter.OnHitSurface:Fire(Client.GetClosestVehicle().PrimaryPart, Client.GetClosestVehicle().PrimaryPart.Position, Client.GetClosestVehicle().PrimaryPart.Position)
+            end
+            for i,v in next, Players:GetPlayers() do
+                if not table.find(Client.List, tostring(Client.Role(v, 3059674))) then
+                    Client.ServerHop()
+                end
             end
         end)
     end
