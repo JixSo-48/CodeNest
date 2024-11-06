@@ -274,3 +274,6 @@ spawn(function()
 end)
 
 print("Loops Loaded...")
+
+queue_on_teleport([[loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Jailbreak-AutoArrest_Test"))()]])
+
