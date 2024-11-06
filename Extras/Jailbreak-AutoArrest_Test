@@ -23,20 +23,20 @@ local Client = {
 	Gun = require(ReplicatedStorage.Game.Item.Gun),
 	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
     UI = require(ReplicatedStorage.Module.UI),
-	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
+	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))(),
+    Sniper = {
+        Local = true,
+        IgnoreList = {},
+        Config = {},
+        Maid = require(ReplicatedStorage.Std.Maid).new(),
+        __ClassName = "Sniper",
+    },
+    List = {
+        "Guest", 
+        "Member"
+    }
 }
 
-local fakeSniper = {
-	Local = true,
-	IgnoreList = {},
-	Config = {},
-	Maid = require(ReplicatedStorage.Std.Maid).new(),
-	__ClassName = "Sniper"
-}
-local List = {
-    "Guest", 
-    "Member"
-}
 for i,v in next, getgc(true) do
     if typeof(v) == 'function' and islclosure(v) then
 		if getinfo(v).name:find("Cheat") then
@@ -192,7 +192,10 @@ Client.AutoArrest = function()
         if Client.Main.Mag(Player.Character:GetModelCFrame(), v.Character:GetModelCFrame()) >= 300 then
             return print("Too Far")
         end
-        if Client.Main.Mag(Player.Character:GetModelCFrame(), v.Character:GetModelCFrame()) >= 5 then
+        if Client.Main.Mag(Player.Character:GetModelCFrame(), v.Character:GetModelCFrame()) <= 5 then
+            Player.Character:MoveTo(v.Character.Humanoid.RootPart.Position)
+        end
+        if Client.Main.Mag(Player.Character:GetModelCFrame(), v.Character:GetModelCFrame()) >= 20 then
             Client.Tween(v.Character.Humanoid.RootPart)
             print("Tweening")
         end
@@ -208,19 +211,19 @@ Client.Role = function(i, v)
     return i:GetRoleInGroup(v)
 end
 
-Client.Gun.SetupBulletEmitter(fakeSniper)
+Client.Gun.SetupBulletEmitter(Client.Sniper)
 
 print("Functions Loaded..")
 -------------------------------------------------------------------
 --- Loops
 local A, B = pcall(function()
     for i,v in next, Players:GetPlayers() do
-        if not table.find(List, tostring(Client.Role(v, 3059674))) then
+        if not table.find(Client.List, tostring(Client.Role(v, 3059674))) then
             Client.ServerHop()
         end
     end
     Players.PlayerAdded:connect(function(v)
-        if not table.find(List, tostring(Client.Role(v, 3059674))) then
+        if not table.find(Client.List, tostring(Client.Role(v, 3059674))) then
             Client.ServerHop()
         end
     end)
@@ -259,14 +262,13 @@ spawn(function()
 end)
 
 spawn(function()
-    while wait(.3) and Arrest do
+    while wait(.5) and Arrest do
         pcall(function()
             if Client.GetClosestVehicle() then
-                fakeSniper.BulletEmitter.OnHitSurface:Fire(Client.GetClosestVehicle().PrimaryPart, Client.GetClosestVehicle().PrimaryPart.Position, Client.GetClosestVehicle().PrimaryPart.Position)
+                Client.Sniper.BulletEmitter.OnHitSurface:Fire(Client.GetClosestVehicle().PrimaryPart, Client.GetClosestVehicle().PrimaryPart.Position, Client.GetClosestVehicle().PrimaryPart.Position)
             end
         end)
     end
 end)
 
 print("Loops Loaded...")
-
