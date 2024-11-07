@@ -63,18 +63,28 @@ function CodeNest.Rejoin()
 end
 
 function CodeNest.ServerHop()
-    spawn(function()
-        while wait(4) do
-            local Gay = Global.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. game.PlaceId .. '/servers/Public?sortOrder=Asc&limit=100'))
-            for i,v in next, Gay.data do
-                if v.playing and v.playing < v.maxPlayers then
-                    Global.TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id)
-                    break
-                end
+	local Servers, ServerData
+	Servers = request({
+        Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=false", tostring(game.PlaceId)),
+        Method = "GET",
+    })
+    if not Servers then return end
+    ServerData = Global.HttpService.JSONDecode(Global.HttpService, Servers.Body)
+    if not ServerData then return end
+    if not ServerData.data then return Global.TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId) end
+    repeat wait()
+        for i,v in next, ServerData.data do
+        	local Playing = tonumber(v.playing)
+            local Maxing = tonumber(v.maxPlayers)
+            if Playing < Maxing - 2 and v.id ~= game.JobId then
+                Server = tostring(v.id)
+                break
             end
         end
-    end)    
+	until Server
+    Global.TeleportService:TeleportToPlaceInstance(game.PlaceId, Server)
 end
+
 function CodeNest.NoClip()
     for i,v in next, Player.Character:GetChildren() do
         if v:IsA("BasePart") then
