@@ -169,6 +169,15 @@ Client.InventoryItemSystem.playerHasItem = function(Player, Key)
 	end
 end
 
+Client.KillMasionNPCs = function()
+    for i,v in next, Workspace.MansionRobbery.GuardsFolder
+        if v:FindFirstChild("Humanoid") then
+            if isnetworkowner(v.HumanoidRootPart) then
+                v:FindFirstChildWhichIsA("Humanoid").Health = 0
+            end
+        end
+    end
+end
 Client.OilKillNPC = function()
 	local Oil = Workspace:FindFirstChild("OilRig")
 	if Oil then
@@ -321,6 +330,9 @@ end
 spawn(function()
 	while wait(.2) do
 		pcall(function()
+            if DDD then
+                Client.KillMasionNPCs()
+            end
 			if KillBoys then
 				Client.OilKillNPC()
 			end
@@ -543,6 +555,14 @@ end)
 Misc2:CreateToggle({Name = "No Oil NPC"; Flag = "Asfjksdfhjsdhkfjh"; Default = false;
 	Callback = function(Value)
 		KillBoys = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+Misc2:CreateToggle({Name = "No Mansion NPC"; Flag = "Asfjksdfhjsdhkdddfjh"; Default = false;
+	Callback = function(Value)
+		DDD = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
