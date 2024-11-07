@@ -60,7 +60,8 @@ local Names = {
 	"Tile",
 	"Wood",
 	"2_StorageAndMeeting",
-	"5_TheCEO"
+	"5_TheCEO",
+    "3_ExpandedStore"
 }
 
 
@@ -590,12 +591,12 @@ Misc:CreateToggle({Name = "Always have key"; Flag = "c";  Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "Toggle";Min = 1;Max = 300;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "Toggle";Min = 1;Max = 120;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 	    SpeedT = newValue
 	end;
 	ToggleCallback = function(newValue) 
-		Client.Main.Fly(newValue, SpeedT)
+		Client.Main.Flying(newValue, SpeedT)
 	end;
 	Warning = "This has a warning";
 	WarningIcon = 12345;
