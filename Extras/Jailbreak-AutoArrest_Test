@@ -1,9 +1,3 @@
-
-getgenv().Arrest = {
-	MinBounty = 2500,
-	Enabled = true
-}
-
 if not game.Loaded then
     game.Loaded:Wait()
     task.wait(3)
@@ -22,9 +16,10 @@ local Workspace = Services.Workspace
 local Teams = Services.Teams
 local CoreGui = Services.CoreGui
 local PathfindingService = Services.PathfindingService
+local ScriptContext = Services.ScriptContext
 local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
-
+local Cursed = 0
 local Client = {
 	TagUtils = require(ReplicatedStorage.Tag.TagUtils),
 	ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
@@ -42,10 +37,10 @@ local Client = {
     List = {
         "Guest", 
         "Member"
-    },
-    Parts = {}
+    }
 }
-
+local Parts = {}
+-- AntiCheat
 for i,v in next, getgc(true) do
     if typeof(v) == 'function' and islclosure(v) then
         if debug.info(v, "n"):match("CheatCheck") then
@@ -54,22 +49,24 @@ for i,v in next, getgc(true) do
     end
 end
 
-for i,v in next, require(game:GetService("ReplicatedStorage").GameAnalytics.GameAnalytics.Postie) do
+for i,v in next, getconnections(ScriptContext.Error) do
+    v:Disable()
+end
+
+for i,v in next, require(ReplicatedStorage.GameAnalytics.GameAnalytics.Postie) do
     hookfunction(v, function() return wait(9e9) end)
 end
 
-for i,v in next, Workspace:GetDescendants() do
-    if v.Name == "Region" then
-        table.insert(Client.Parts, v)
+for i,v in next, workspace:GetDescendants() do
+    if v.Name == "Region" and v:IsA("BasePart") then
+        table.insert(Parts, v)
     end
 end
-
 if Player.PlayerGui:FindFirstChild("TeamSelectGui") then
     for i,v in next, getconnections(Player.PlayerGui.TeamSelectGui.TeamSelect.Frame.MiddleContainer.TeamsContainer.ImagesContainer.PoliceTeam.Activated) do
         v.Function()
     end
 end
-
 Client.TagUtils.isPointInTag = function(Args1, Args2)
     return true
 end
@@ -83,6 +80,31 @@ Client.Eject = function()
             v:Callback(true)
         end
     end
+end
+
+Client.IsUnderRoof = function(P)
+    if not P and not P.Character and not P.Character.Humanoid.RootPart then
+        return false
+    end
+    local RaycastParams = RaycastParams.new()
+    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    if Workspace:FindFirstChild("Rain") then
+        RaycastParams.FilterDescendantsInstances = {P.Character, Workspace.Rain, Workspace.Vehicles}
+    else
+        RaycastParams.FilterDescendantsInstances = {P.Character, Workspace.Vehicles}
+    end
+    local A, B = pcall(function()
+        local Raycast = Workspace:Raycast(P.Character.Head.Position, Vector3.new(0, 1, 0) * 100, RaycastParams)
+    end)
+    if not A then
+        return false
+    end
+    if Raycast then
+        return true
+	else
+		return false
+    end
+    return false
 end
 
 Client.Arrest = function(v)
@@ -147,7 +169,7 @@ end
 
 Client.Respawn = function()
     Player.Character.Humanoid.Health = 1
-    Player.Character.Head:Destroy()
+    Player.Character.Humanoid.Health = 0
     Player.Character.Humanoid.Died:Wait()
     Player.CharacterAdded:Wait()
 end
@@ -160,11 +182,6 @@ Client.Tween = function(Object1)
             local TweenInfo = TweenInfo.new(Timing, Enum.EasingStyle.Linear)
             local TweenSystem = Services.TweenService:Create(Player.Character.HumanoidRootPart, TweenInfo, {CFrame = Object1.CFrame})
             TweenSystem:Play()
-        else
-            Client.Respawn()
-            for i=1,5 do wait()
-                Player.Character:MoveTo(Object1.Position)
-            end
         end
     end
 end
@@ -180,7 +197,7 @@ Client.GetBounty = function()
                     local Bounty3 = string.gsub(Bounty2, "%$", "")
                     if tonumber(Bounty3) >= Arrest.MinBounty then
                         for i,v2 in next, Players:GetPlayers() do
-                            if v2.Character and v2.Character:FindFirstChild("Humanoid") and v2.Character.Humanoid.Health > 0 and not v2.Folder:FindFirstChild("Cuffed") then
+                            if v2.Character and v2.Character:FindFirstChild("Humanoid") and v2.Character.Humanoid.Health > 0 and not v2.Folder:FindFirstChild("Cuffed") and not Client.IsUnderRoof(v2) then
                                 if v2.Character and v2.Character.Humanoid.RootPart then
                                     if v2.Name == v.Stats.PlayerName.Text or v2.DisplayName == v.Stats.PlayerName.Text then
                                         return v2
@@ -200,7 +217,7 @@ Client.AutoArrest = function()
     local v = Client.GetBounty()
     if not v then return end
     Client.Respawn()
-    for i=1, 5 do wait()
+    for i=1, 20 do wait()
         Player.Character:MoveTo(v.Character.Humanoid.RootPart.Position)
     end
     repeat 
@@ -239,12 +256,19 @@ print("Functions Loaded..")
 -------------------------------------------------------------------
 --- Loops
 
+Player.CharacterAdded:Connect(function(v)
+    v:WaitForChild("Humanoid")
+    v.Humanoid.Died:Connect(function()
+        Cursed = Cursed + 1
+    end)
+end)
+
 RunService.Stepped:Connect(function()
-    for i,v in next, Client.Parts do
-        Player:RequestStreamAroundAsync(v:GetModelCFrame().Position, 75)
+    for i,v in next, Parts do
+        Player.RequestStreamAroundAsync(Player, v.Position, 9e9)
     end
 end)
-wait(5)
+wait(3)
 spawn(function()
     while wait(4) and Arrest do
         local A, B = pcall(function()
@@ -278,12 +302,17 @@ spawn(function()
                     Client.ServerHop()
                 end
             end
+            if Player.PlayerGui:FindFirstChild("TeamSelectGui") then
+                Client.ServerHop()
+            end
+            if Cursed == 20 then
+                Client.ServerHop()
+            end
         end)
     end
 end)
 
 print("Loops Loaded...")
-
 
 
 queue_on_teleport([[getgenv().Arrest = {
