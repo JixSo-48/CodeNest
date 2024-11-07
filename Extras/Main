@@ -139,4 +139,118 @@ function CodeNest.JumpPower(Height)
     sethiddenproperty(CodeNest.GetHumanoid(), CodeNest.JumpPowerHeight(), Height)
 end
 
+
+function CodeNest.Fly(Toggle, Speed)
+    getgenv().Flying = Toggle
+    if Toggle then
+        local Max = 0
+        local LP = Global.Players.LocalPlayer
+        local Mouse = LP:GetMouse()
+        Max = Max + 1
+        if Toggle then
+            local T = LP.Character:FindFirstChild("UpperTorso",true) or LP.Character:FindFirstChild("HumanoidRootPart",true)
+            local S = {
+                F = 0,
+                B = 0,
+                L = 0,
+                R = 0
+            }
+            local S2 = {
+                F = 0,
+                B = 0,
+                L = 0,
+                R = 0
+            }
+            local SPEED = 5
+            local function FLY()
+                local BodyGyro = Instance.new("BodyGyro", T)
+                local BodyVelocity = Instance.new("BodyVelocity", T)
+                BodyGyro.P = 9e4
+                BodyGyro.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+                BodyGyro.cframe = T.CFrame
+                BodyVelocity.velocity = Vector3.new(0, 0, 0)
+                BodyVelocity.maxForce = Vector3.new(9e9, 9e9, 9e9)
+                spawn(function()
+                    repeat wait()
+                        if S.L + S.R ~= 0 or S.F + S.B ~= 0 then
+                            SPEED = Speed
+                        elseif not (S.L + S.R ~= 0 or S.F + S.B ~= 0) and SPEED ~= 0 then
+                            SPEED = 0
+                        end
+                        if (S.L + S.R) ~= 0 or (S.F + S.B) ~= 0 then
+                            BodyVelocity.velocity =
+                                ((Workspace.CurrentCamera.CoordinateFrame.lookVector * (S.F + S.B)) +
+                                ((Workspace.CurrentCamera.CoordinateFrame *
+                                CFrame.new(S.L + S.R, (S.F + S.B) * 0.2, 0).p) -
+                                Workspace.CurrentCamera.CoordinateFrame.p)) *
+                                SPEED
+                            S2 = {
+                                F = S.F,
+                                B = S.B,
+                                L = S.L,
+                                R = S.R
+                            }
+                        elseif (S.L + S.R) == 0 and (S.F + S.B) == 0 and SPEED ~= 0 then
+                            BodyVelocity.velocity =
+                                ((Workspace.CurrentCamera.CoordinateFrame.lookVector * (S2.F + S2.B)) +
+                                ((Workspace.CurrentCamera.CoordinateFrame *
+                                CFrame.new(S2.L + S2.R, (S2.F + S2.B) * 0.2, 0).p) -
+                                Workspace.CurrentCamera.CoordinateFrame.p)) *
+                                SPEED
+                        else
+                            BodyVelocity.velocity = Vector3.new(0, 0.1, 0)
+                        end
+                        BodyGyro.cframe = Workspace.CurrentCamera.CoordinateFrame
+                    until not Toggle or not Flying
+                    S = {
+                        F = 0,
+                        B = 0,
+                        L = 0,
+                        R = 0
+                    }
+                    S2 = {
+                        F = 0,
+                        B = 0,
+                        L = 0,
+                        R = 0
+                    }
+                    SPEED = 0
+                    BodyGyro:destroy()
+                    BodyVelocity:destroy()
+                end
+                )
+            end
+            Mouse.KeyDown:connect(
+                function(k)
+                    if k:lower() == "w" then
+                        S.F = 1
+                    elseif k:lower() == "s" then
+                        S.B = -1
+                    elseif k:lower() == "a" then
+                        S.L = -1
+                    elseif k:lower() == "d" then
+                        S.R = 1
+                    end
+                end
+            )
+            Mouse.KeyUp:connect(
+                function(k)
+                    if k:lower() == "w" then
+                        S.F = 0
+                    elseif k:lower() == "s" then
+                        S.B = 0
+                    elseif k:lower() == "a" then
+                        S.L = 0
+                    elseif k:lower() == "d" then
+                        S.R = 0
+                    end
+                end
+            )
+            FLY()
+            if Max == 2 then
+                Max = 0
+            end
+        end
+    end
+end
 return CodeNest
