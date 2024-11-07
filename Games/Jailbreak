@@ -10,6 +10,7 @@ local ReplicatedStorage = Services.ReplicatedStorage
 local Players = Services.Players
 local RunService = Services.RunService
 local Workspace = Services.Workspace
+local UserInputService = Services.UserInputService
 local CoreGui = Services.CoreGui
 local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
@@ -29,7 +30,7 @@ local Client = {
 	GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
 	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
 	Doors = {},
-	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Teleport", true))()
+	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
 }
 local Guns = {
     "AK47",
@@ -343,13 +344,6 @@ spawn(function()
 			if LavaFun2 and Workspace:FindFirstChild("LavaFun") and Workspace.LavaFun:FindFirstChild("Lavatouch") then
 				firetouchinterest(Player.Character.HumanoidRootPart, Workspace.LavaFun.Lavatouch, 0)
 			end
-			if WalkSpeed then
-				local New = Camera.CFrame:VectorToWorldSpace(Client.ControlModule:GetMoveVector())
-				local Old = Player.Character.HumanoidRootPart.CFrame.Position
-				local NewPosition = Old + (New * WalkSpeedValue * RunService.Heartbeat:Wait())
-				local LookDirection = Camera.CFrame.LookVector
-				Player.Character.HumanoidRootPart.CFrame = CFrame.new(NewPosition, NewPosition + Vector3.new(LookDirection.X, 0, LookDirection.Z))
-			end
 			if TurnSpeed and Client.EditCar().TurnSpeed ~= TurnSpeedV then
 				Client.EditCar("TurnSpeed", TurnSpeedV)
 			end
@@ -466,7 +460,6 @@ Misc2:CreateToggle({Name = "Auto Escape"; Flag = "Asf34shdgadhhsahd345jksdfhjer4
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
-
 
 Misc:CreateToggle({Name = "Silent Aim"; Flag = "Asfjksdfhjersdhkfjh"; Default = false;
 	Callback = function(Value)
@@ -597,12 +590,12 @@ Misc:CreateToggle({Name = "Always have key"; Flag = "c";  Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "Toggle";Min = 1;Max = 120;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "Toggle";Min = 1;Max = 300;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
-		WalkSpeedValue = newValue
+	    SpeedT = newValue
 	end;
 	ToggleCallback = function(newValue) 
-		WalkSpeed = newValue
+		Client.Main.Fly(newValue, SpeedT)
 	end;
 	Warning = "This has a warning";
 	WarningIcon = 12345;
