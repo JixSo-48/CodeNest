@@ -170,7 +170,7 @@ Client.InventoryItemSystem.playerHasItem = function(Player, Key)
 end
 
 Client.KillMasionNPCs = function()
-    for i,v in next, Workspace.MansionRobbery.GuardsFolder
+    for i,v in next, Workspace.MansionRobbery.GuardsFolder:GetChildren() do
         if v:FindFirstChild("Humanoid") then
             if isnetworkowner(v.HumanoidRootPart) then
                 v:FindFirstChildWhichIsA("Humanoid").Health = 0
