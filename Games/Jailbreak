@@ -29,9 +29,14 @@ local Client = {
 	GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
 	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
 	Doors = {},
-	GoTo = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Teleport", true))()
+	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Teleport", true))()
 }
-
+local Guns = {
+    "AK47",
+    "Pistol",
+    "Shotgun",
+    "Revolver",
+}
 local PlayersTable = {}
 local Drops = {}
 local Names = {
@@ -72,11 +77,22 @@ for i,v in next, getgc(true) do
 	elseif typeof(v) == 'function' and islclosure(v) then
         if table.find(getconstants(v), 'SequenceRequireState') then
             Client.Door = v
-		elseif getinfo(v).name == "CheatCheck" then
+		elseif debug.info(v, "n") == "CheatCheck" then
 			AntiCheat = v
         end
     end
 end
+
+local OldNameCall = nil
+OldNameCall = hookmetamethod(game, "__namecall", function(...)
+    local Self = ...
+    local Args = {...}
+    if Self.Name == "MansionBossNPCDamage" then
+        return
+    end
+    return OldNameCall(...)
+end)
+
 Client.EditCar = function(Value, Number)
 	local packet = Client.GetLocalVehiclePacket(Player)
 	if packet and Value and Number then
@@ -88,14 +104,17 @@ end
 hookfunction(AntiCheat, function()
     return
 end)
+
 Client.Teleport = function(CFrame)
 	Player.Character.Humanoid.Health = 0
 	repeat wait() until Player.Character.Humanoid.Health ~= 0 and Player.Character:FindFirstChild("HumanoidRootPart") 
 	Player.Character.HumanoidRootPart.CFrame = CFrame
 end
+
 Client.GetBank = function()
     return Workspace.Banks.Bank.Layout:FindFirstChildWhichIsA("Model")
 end
+
 Client.AutoEscape = function()
     if Player.Team.Name == "Prisoner" or not Player.Character then
         if Player.PlayerGui.MainGui.CellTime.Visible then
@@ -163,6 +182,23 @@ Client.OilKillNPC = function()
 	end
 end
 
+Client.KillDropNPC = function()
+    for i,v in next, Workspace:GetChildren() do
+        if v.Name == "Drop" then
+            local Guards = v:FindFirstChild("GuardsFolder")
+            if Guards then
+                for i,v in next, Guards:GetChildren() do
+                    if v:FindFirstChild("Humanoid") then
+                        if isnetworkowner(v.HumanoidRootPart) then
+                            v:FindFirstChildWhichIsA("Humanoid").Health = 0
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 local Yes = function(v)
 	if v:IsA("TouchTransmitter") then
 		if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
@@ -225,6 +261,7 @@ require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList = fu
     end
     return Ray(...)
 end
+
 Client.GetAllGuns = function()
 	setthreadcontext(2)
 	if not Client.GunShopUI.isOpen() then
@@ -250,15 +287,16 @@ end
 
 
 Client.Shoot = function()
+    local Gun2 = Gun or "Pistol"
 	local Equip = Client.ItemSystem.GetLocalEquipped()
 	if Equip then
 		Client.Gun._attemptShoot(Equip, {})
 	end
-	if Player.Folder:FindFirstChild("Pistol") and GetClosestTargetOnOtherTeam() then
-		Player.Folder.Pistol.InventoryEquipRemote:FireServer(true)
+	if Player.Folder:FindFirstChild(Gun2) and GetClosestTargetOnOtherTeam() then
+		Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
 	elseif Equip and not GetClosestTargetOnOtherTeam() then
-		Player.Folder.Pistol.InventoryEquipRemote:FireServer(false)
-	elseif not Player.Folder:FindFirstChild("Pistol") then
+		Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
+	elseif not Player.Folder:FindFirstChild(Gun2) then
 		Client.GetAllGuns()
 	end
 end
@@ -284,6 +322,9 @@ spawn(function()
 			if KillBoys then
 				Client.OilKillNPC()
 			end
+            if DropNPCS then
+                Client.KillDropNPC()
+            end
 			if Kill then
 				Client.Shoot()
 			end
@@ -402,7 +443,7 @@ end)
 
 Misc2:CreateToggle({Name = "Kill Drop NPCS"; Flag = "Asf34345jksdfhjersdhkfjh"; Default = false;
 	Callback = function(Value)
-		KillBoys = Value
+		DropNPCS = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
@@ -436,6 +477,8 @@ Misc:CreateToggle({Name = "Silent Aim"; Flag = "Asfjksdfhjersdhkfjh"; Default = 
     CallbackOnCreation = true;
 })
 
+
+
 Misc:CreateToggle({Name = "Wall Bang"; Flag = "Asfjksdfhjersgrgettrtrdhkfjh"; Default = false;
 	Callback = function(Value)
 		WallBang = Value
@@ -453,6 +496,19 @@ Misc:CreateToggle({Name = "Kill Aura"; Flag = "Asfjksdf435hjersgrgettrtrdhkfjh";
 	Warning = "";
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
+})
+
+
+local Hello = Misc:CreateDropdown({ 
+	Name = "Kill Aura Gun"; -- required: name of element
+	Callback = function(v) 
+		Gun = v 
+	end;
+	Options = Guns;
+	ItemSelecting = true; 
+	DefaultItemSelected = "";
+	Warning = "This has a warning";
+	WarningIcon = 12345;
 })
 
 local PlayerTable = Misc:CreateDropdown({ 
@@ -490,9 +546,9 @@ spawn(function()
 	end
 end)
 
-Misc2:CreateToggle({Name = "No AirDrop Cops"; Flag = "Asfjksdfhjsdhkfjh"; Default = false;
+Misc2:CreateToggle({Name = "No Oil NPC"; Flag = "Asfjksdfhjsdhkfjh"; Default = false;
 	Callback = function(Value)
-		AntiAirDropCops1 = Value
+		KillBoys = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
