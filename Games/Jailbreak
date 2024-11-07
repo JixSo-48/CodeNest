@@ -372,6 +372,16 @@ spawn(function()
             if MaxHeight2 then
                 Client.EditCar("MaxHeight", 9e9)
             end
+            if NoPop then
+                if Client.EditCar().Type == "Heli" then
+                    Client.EditCar("FallOutOfSkyDuration", 0)
+                    Client.EditCar("DisableDuration", 0)
+                else
+                    Client.EditCar("TirePopDuration", 0)
+                    Client.EditCar("DisableDuration", 0)
+                    Client.EditCar("TirePopProportion", 0)
+                end
+            end            
 		end)
 	end
 end)
@@ -623,6 +633,14 @@ Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "T
 	CallbackOnCreation = true;
 })
 
+V:CreateToggle({Name = "Anti PopTire"; Flag = "sdhkfgjhsdgfsdfh2s384783247";  Default = false;
+	Callback = function(Value)
+		NoPop = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
 
 Heli:CreateSliderToggle({Name = "Heli Speed"; SliderFlag = "dfdsfsdfshjvghjyuvgfhjghjgjhghgdsfdsfdsdfer"; ToggleFlag = "dfgdfdgdghdsjfgjksdfh";Min = 1;Max = 10;AllowOutOfRange = true;Digits = 2;SliderDefault = 1;ToggleDefault = false;
 	SliderCallback = function(newValue)
