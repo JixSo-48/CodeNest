@@ -596,7 +596,7 @@ Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "T
 	    SpeedT = newValue
 	end;
 	ToggleCallback = function(newValue) 
-		Client.Main.Flying(newValue, SpeedT)
+		Client.Main.Fly(newValue, SpeedT)
 	end;
 	Warning = "This has a warning";
 	WarningIcon = 12345;
