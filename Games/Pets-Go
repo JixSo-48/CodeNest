@@ -67,7 +67,7 @@ end
 
 Client.Bloons = function()
     for i,v in next, Client.FlyingGifts:GetChildren() do
-        if v:IsA("Model") and v.Giftbox.Transparency == 0 then
+        if v:IsA("Model") and v:FindFirstChild("Giftbox") and v.Giftbox.Transparency == 0 then
             if v.Giftbox:GetAttributes().FlyingGiftUID then wait()
                 Client.Claim(v.Giftbox:GetAttributes().FlyingGiftUID)
             end
