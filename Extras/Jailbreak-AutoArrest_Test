@@ -132,25 +132,7 @@ Client.GetClosestVehicle = function()
 end
 
 Client.ServerHop = function()
-    local Nig = request({Url = string.format("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true", game.PlaceId)})
-    local Server = nil
-    local Gay = Services.HttpService:JSONDecode(Nig.Body)
-    repeat wait()
-        if not Gay then
-            Gay = Services.HttpService:JSONDecode(Nig.Body)
-        else
-            for i,v in next, Gay.data do
-                local Playing = tonumber(v.playing)
-                local Maxing = tonumber(v.maxPlayers)
-                if Playing > 20 and Playing < Maxing and Playing < 25 then
-                    Server = v.id
-                    print(Server)
-                    break
-                end
-            end
-        end
-    until Server
-    Services.TeleportService:TeleportToPlaceInstance(game.PlaceId, tostring(Server))
+    Client.Main.ServerHop()
 end
 
 Client.CreatePath = function(Model, Position, Table)
