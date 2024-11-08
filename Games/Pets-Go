@@ -245,15 +245,15 @@ end)
 spawn(function()
 	while wait(5) do
         local A, B = pcall(function()
-			if Mer then
-				Client.Merchant()
-			end
 			if Upgrade then
 				Client.Upgrade()
 			end
 			if AutoCraft then
 				Client.AutoCraft()
 			end
+            if Vending then
+                Client.Vending()
+            end
 		end)
         if not A then
             print(B)
@@ -270,9 +270,6 @@ spawn(function()
             end
             if Gifts then
                 Client.CollectGift()
-            end
-            if Vending then
-                Client.Vending()
             end
             if GrabFruits then
                 Client.GrabFruits()
