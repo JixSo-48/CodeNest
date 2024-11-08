@@ -154,6 +154,15 @@ Client.settarget = function(Coin)
 	end
 end
 
+Client.Fish = function()
+    local H = Workspace.MAP.INTERACT:FindFirstChild("FishingPads")
+    if H then
+        Player.Character:SetPrimaryPartCFrame(CFrame.new(H.FishingBillboard.Pad.CFrame.Position + Vector3.new(0,3,0)))
+        Client.InvokeServer("Fishing_Fish", {})
+        Client.FireServer("Fishing_Success", {})
+    end
+end
+
 Client.Dig = function()
 	local Pets = {}
 	for i,v in next, Client.PlayerPet.GetAll() do
@@ -208,6 +217,9 @@ RunService.Heartbeat:Connect(function()
 	end
     if Roll3 then
         Client.InvokeServer("Eggs_Roll", {})
+    end
+    if StartFishing then
+        Client.Fish()
     end
 end)
 spawn(function()
@@ -395,6 +407,14 @@ AutoRoll2:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfddddddddddfdsfdsf"; D
 AutoRoll2:CreateToggle({Name = "Auto Claim Bonus Roll"; Flag = "asdfsdfdfdsdfdsf"; Default = false;
 	Callback = function(Value)
 		Roll2 = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+AutoRoll2:CreateToggle({Name = "Auto Fish"; Flag = "asdfsdfddsad22fdsdfdsf"; Default = false;
+	Callback = function(Value)
+		StartFishing = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
