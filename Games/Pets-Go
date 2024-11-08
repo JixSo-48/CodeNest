@@ -173,10 +173,6 @@ Client.Potion = function()
 	end
 end
 
-Client.Roll = function()
-	Client.InvokeServer("Eggs_Roll", {})
-end
-
 Client.Upgrade = function()
 	for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
 		if not Client.UpgradeCmds.IsUnlocked(i) then
@@ -229,9 +225,10 @@ spawn(function()
         end
 	end
 end)
+
 spawn(function()
-	while wait(.5) do
-        local Script, Error = pcall(function()
+	while wait() do
+        local A, B = pcall(function()
             Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
             if Roll2 then
                 Client.InvokeServer("Bonus Rolls: Claim", {})
@@ -245,8 +242,9 @@ spawn(function()
             if GrabFruits then
                 Client.GrabFruits()
             end
-            if Roll then
-                Client.Roll()
+            if Roll3 then
+                print("Hello")
+                Client.InvokeServer("Eggs_Roll", {})
             end
             if Potion then
                 Client.Potion()
@@ -267,8 +265,8 @@ spawn(function()
                 Client.CollectRelics()
             end
         end)
-        if not Script then
-            warn(Error)
+        if not A then
+            print(B)
         end
 	end
 end)
@@ -387,9 +385,9 @@ Pots2:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; De
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
-AutoRoll2:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfdfdsfdsf"; Default = false;
+AutoRoll2:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfddddddddddfdsfdsf"; Default = false;
 	Callback = function(Value)
-		Roll = Value
+		Roll3 = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
