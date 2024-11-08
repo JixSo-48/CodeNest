@@ -42,10 +42,16 @@ for i,v in next, getgc(true) do
 			Client.requestRelics = v
 		elseif getinfo(v).name == "relicClicked" then
 			Client.relicClicked = v
-		end
+		elseif getfenv(v).script == Player.PlayerScripts.Scripts.Game.Fishing then
+            if debug.info(v, "n") == "startFishing" then
+                Client.startFishing = v
+            elseif debug.info(v, "n") == "stopFishing" then
+                Client.stopFishing = v
+                Client.Old = v
+            end
+        end
 	end
 end
-
 Client.FireServer = function(Remote, ...)
 	Client.Network.Fire(Remote, unpack(...))
 end
@@ -156,10 +162,14 @@ end
 
 Client.Fish = function()
     local H = Workspace.MAP.INTERACT:FindFirstChild("FishingPads")
-    if H then
-        Player.Character:SetPrimaryPartCFrame(CFrame.new(H.FishingBillboard.Pad.CFrame.Position + Vector3.new(0,3,0)))
-        Client.InvokeServer("Fishing_Fish", {})
-        Client.FireServer("Fishing_Success", {})
+    if not Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
+        Client.startFishing(Workspace.MAP.INTERACT.FishingPads.FishingBillboard)
+    end
+    Client.InvokeServer("Fishing_Fish", {})
+    wait()
+    Client.FireServer("Fishing_Success", {})
+    if not StartFishing and Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
+        Client.Old()
     end
 end
 
@@ -208,6 +218,16 @@ Client.PlayerPet.CalculateSpeedMultiplier = function(...)
 		return math.huge
 	end
 end
+local Old = Client.stopFishing
+local L = Client.stopFishing
+L = hookfunction(Client.stopFishing, function(...)
+    if StartFishing then
+        return
+    else
+        return L(...)
+    end
+end)
+
 RunService.Heartbeat:Connect(function()
 	if Collect then
 		Client.Collect()
