@@ -186,9 +186,11 @@ Client.Upgrade = function()
 end
 Client.AutoCraft = function()
 	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-	Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
-    for i=1, 22 do
-		Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
+	if Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine") then
+		Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+		for i=1, 22 do
+			Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
+		end
 	end
     Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
