@@ -206,6 +206,9 @@ RunService.Heartbeat:Connect(function()
 	if Breakables then
 		Client.settarget(Client.Nearest())
 	end
+    if Roll3 then
+        Client.InvokeServer("Eggs_Roll", {})
+    end
 end)
 spawn(function()
 	while wait(5) do
@@ -241,10 +244,6 @@ spawn(function()
             end
             if GrabFruits then
                 Client.GrabFruits()
-            end
-            if Roll3 then
-                print("Hello")
-                Client.InvokeServer("Eggs_Roll", {})
             end
             if Potion then
                 Client.Potion()
