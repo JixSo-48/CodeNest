@@ -219,7 +219,7 @@ Client.AutoCraft = function()
 	if Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine") then
 		Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
 		for i=1, 22 do
-			Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
+			Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, math.round(Client.PotionAmount) or 1})
 		end
 	end
     Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
@@ -411,6 +411,7 @@ local Item2 = Coins2:CreateDropdown({
 	Warning = "This has a warning";
 	WarningIcon = 12345;
 })
+
 spawn(function()
 	while wait() do  
 		for i,v in next, Client.Break:GetChildren() do
@@ -424,14 +425,6 @@ spawn(function()
 	end
 end)
 
-Pots2:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; Default = false;
-	Callback = function(Value)
-		AutoCraft = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
 AutoRoll2:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfddddddddddfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Roll3 = Value
@@ -518,6 +511,28 @@ Pots2:CreateToggle({Name = "Auto Use All Potions"; Flag = "asdfshgfhdfdsf"; Defa
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
+
+Pots2:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; Default = false;
+	Callback = function(Value)
+		AutoCraft = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Pots2:CreateSliderToggle({Name = "Craft amount of potions"; SliderFlag = "dfssdfsdssfsdfsdfsdfsfdsfdssdfer"; ToggleFlag = "dfghdssssssjfgjksdsdfsdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+	SliderCallback = function(newValue)
+		Client.PotionAmount = newValue
+	end;
+	ToggleCallback = function(newValue) 
+		AutoCraft = newValue
+	end;
+	Warning = "This has a warning";
+	WarningIcon = 12345;
+	CallbackOnCreation = true;
+})
+
 
 Coins2:CreateToggle({Name = "Auto Dig"; Flag = "a"; Default = false;
 	Callback = function(Value)
