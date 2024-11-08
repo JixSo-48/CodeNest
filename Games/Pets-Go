@@ -50,6 +50,10 @@ for i,v in next, getgc(true) do
                 Client.stopFishing = v
                 Client.Old = v
             end
+        elseif getfenv(v).script == Player.PlayerScripts.Scripts.Game["Flying Gifts"] then
+            if debug.info(v, "n") == "claim" then
+                Client.Claim = v
+            end
         end
 	end
 end
@@ -61,12 +65,21 @@ Client.InvokeServer = function(Remote, ...)
 	Client.Network.Invoke(Remote, unpack(...))
 end
 
+Client.Bloons = function()
+    for i,v in next, Client.FlyingGifts:GetChildren() do
+        if v:IsA("Model") and v.Giftbox.Transparency == 0 then
+            if v.Giftbox:GetAttributes().FlyingGiftUID then wait()
+                Client.Claim(v.Giftbox:GetAttributes().FlyingGiftUID)
+            end
+        end
+    end
+end
+
 Client.Merchant = function()
     for i=1, 6 do
     Client.InvokeServer("CustomMerchants_Purchase", {"StandardMerchant",i})
     end
 end
-
 
 Client.Vending = function()
 	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
@@ -109,9 +122,9 @@ Client.CollectGift = function()
 	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
 	for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
 		Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
-		repeat wait()
+		for i=1, 50 do
 			Client.Gifts.attemptClaim(v)
-		until not v or not v.Model
+        end
 	end
 	Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
@@ -184,16 +197,6 @@ Client.Dig = function()
 			end
 		end
 	end
-end
-
-Client.Bloons = function()
-    for i,v in next, Client.FlyingGifts:GetChildren() do
-        if v:IsA("Model") and v.Giftbox.Transparency == 0 then
-            if v:GetAttributes().FlyingGiftUID then
-                Client.FireServer("FlyingGifts_Claim", {tonumber(v:GetAttributes().FlyingGiftUID)})
-            end
-        end
-    end
 end
 
 Client.Potion = function()
