@@ -16,6 +16,7 @@ local Client = {
 	Break = Workspace.__THINGS.Breakables,
 	Orbs = Workspace.__THINGS.Orbs,
 	Digsites = Workspace.__THINGS.Digging,
+    FlyingGifts = Workspace.__THINGS.FlyingGifts,
 	Gifts = getsenv(Player.PlayerScripts.Scripts.Game["Hidden Gifts"]),
 	Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
 	Network = require(ReplicatedStorage.Library.Client.Network),
@@ -184,6 +185,17 @@ Client.Dig = function()
 		end
 	end
 end
+
+Client.Bloons = function()
+    for i,v in next, Client.FlyingGifts:GetChildren() do
+        if v:IsA("Model") and v.Giftbox.Transparency == 0 then
+            if v:GetAttributes().FlyingGiftUID then
+                Client.FireServer("FlyingGifts_Claim", {tonumber(v:GetAttributes().FlyingGiftUID)})
+            end
+        end
+    end
+end
+
 Client.Potion = function()
 	if Client.Save.GetSaves()[Player].Inventory.Consumable then
 		for i,v in next, Client.Save.GetSaves()[Player].Inventory.Consumable do
@@ -241,7 +253,11 @@ RunService.Heartbeat:Connect(function()
     if StartFishing then
         Client.Fish()
     end
+    if Bloons then
+        Client.Bloons()
+    end
 end)
+
 spawn(function()
 	while wait(5) do
         local A, B = pcall(function()
@@ -455,6 +471,7 @@ Coins2:CreateToggle({Name = "Auto Grab Spawned Fruits"; Flag = "asdffsdfdfdsfdsf
     CallbackOnCreation = true;
 })
 
+
 Misc:CreateToggle({Name = "Auto Vending Machine"; Flag = "asdffsdcxfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Vending = Value
@@ -467,6 +484,14 @@ Misc:CreateToggle({Name = "Auto Vending Machine"; Flag = "asdffsdcxfdfdsfdsf"; D
 Coins2:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default = false;
 	Callback = function(Value)
 		Gifts = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+Coins2:CreateToggle({Name = "Auto Pop Bloons"; Flag = "asdddd234324fgdgdffsdfdfdsfdsf"; Default = false;
+	Callback = function(Value)
+		Bloons = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
