@@ -54,23 +54,6 @@ Client.InvokeServer = function(Remote, ...)
 	Client.Network.Invoke(Remote, unpack(...))
 end
 
-Client.Vending = function()
-	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
-	for i,v in next, ReplicatedStorage.__DIRECTORY.CustomMerchants:GetChildren() do
-		local Vending = Workspace.MAP:FindFirstChild("Machines", true)
-		print(i,v)
-		if Vending and Vending:FindFirstChild(require(v).MachineName)then
-			Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
-			for i=1, 5 do
-				Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
-			end
-			wait()
-		end
-	end
-	Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
-end
-
-
 Client.Merchant = function()
     for i=1, 6 do
     Client.InvokeServer("CustomMerchants_Purchase", {"StandardMerchant",i})
@@ -118,10 +101,10 @@ end
 Client.CollectGift = function()
 	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
 	for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
+		Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
 		repeat wait()
-			Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
 			Client.Gifts.attemptClaim(v)
-		until not v or v.Model
+		until not v or not v.Model
 	end
 	Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
@@ -194,16 +177,6 @@ Client.Roll = function()
 	Client.InvokeServer("Eggs_Roll", {})
 end
 
-Client.Relics = function()
-    if v then
-        for i,v in next, getupvalue(getsenv(Player.PlayerScripts.Scripts.Game.Relics).RequestRelics,1) do
-            if v.Model == v then
-                return v
-            end
-        end
-    end
-end
-
 Client.Upgrade = function()
 	for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
 		if not Client.UpgradeCmds.IsUnlocked(i) then
@@ -213,8 +186,8 @@ Client.Upgrade = function()
 end
 Client.AutoCraft = function()
 	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
+	Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
     for i=1, 22 do
-        Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
 		Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
 	end
     Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
