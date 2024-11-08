@@ -218,7 +218,7 @@ Client.AutoCraft = function()
 	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
 	if Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine") then
 		Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
-		for i=1, 22 do
+		for i=1, 50 do
 			Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, math.round(Client.PotionAmount) or 1})
 		end
 	end
