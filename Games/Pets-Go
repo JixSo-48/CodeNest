@@ -121,7 +121,7 @@ Client.CollectGift = function()
 		repeat wait()
 			Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
 			Client.Gifts.attemptClaim(v)
-		until not v or v.Model
+		until not v or not v.Model
 	end
 	Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
@@ -194,16 +194,6 @@ Client.Roll = function()
 	Client.InvokeServer("Eggs_Roll", {})
 end
 
-Client.Relics = function()
-    if v then
-        for i,v in next, getupvalue(getsenv(Player.PlayerScripts.Scripts.Game.Relics).RequestRelics,1) do
-            if v.Model == v then
-                return v
-            end
-        end
-    end
-end
-
 Client.Upgrade = function()
 	for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
 		if not Client.UpgradeCmds.IsUnlocked(i) then
@@ -212,12 +202,9 @@ Client.Upgrade = function()
 	end
 end
 Client.AutoCraft = function()
-	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-    for i=1, 22 do
-        Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+	for i=1, 22 do
 		Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
 	end
-    Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
 
 local Speed = Client.PlayerPet.CalculateSpeedMultiplier
