@@ -392,6 +392,12 @@ RunService.Stepped:Connect(function()
 			Client.EditCar().Velocity.Velocity = Client.EditCar().Velocity.Velocity * HeliSpeed
 		end
 	end
+    if WalkSpeed then
+        Player.Character.Humanoid.WalkSpeed = Client.WalkSpeed
+    end
+    if JumpPower then
+        Player.Character.Humanoid.JumpPower = Client.JumpPower
+    end
 end)
 
 for i,v in next, game:GetDescendants() do
@@ -618,12 +624,36 @@ Misc:CreateToggle({Name = "Always have key"; Flag = "c";  Default = false;
     CallbackOnCreation = true;
 })
 
-Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "Toggle";Min = 1;Max = 120;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "Toggle";Min = 1;Max = 120;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 	    SpeedT = newValue
 	end;
 	ToggleCallback = function(newValue) 
 		Client.Main.Fly(newValue, SpeedT)
+	end;
+	Warning = "This has a warning";
+	WarningIcon = 12345;
+	CallbackOnCreation = true;
+})
+
+Misc:CreateSliderToggle({Name = "WalkSpeed"; SliderFlag = "WalKSpeed"; ToggleFlag = "Toggle";Min = 1;Max = 120;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+	SliderCallback = function(newValue)
+	    Client.WalkSpeed = newValue
+	end;
+	ToggleCallback = function(newValue) 
+		WalkSpeed = newValue
+	end;
+	Warning = "This has a warning";
+	WarningIcon = 12345;
+	CallbackOnCreation = true;
+})
+
+Misc:CreateSliderToggle({Name = "JumpPower"; SliderFlag = "JumpPower"; ToggleFlag = "Toggle";Min = 1;Max = 250;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+	SliderCallback = function(newValue)
+	    Client.JumpPower = newValue
+	end;
+	ToggleCallback = function(newValue) 
+		JumpPower = newValue
 	end;
 	Warning = "This has a warning";
 	WarningIcon = 12345;
@@ -639,7 +669,7 @@ V:CreateToggle({Name = "Anti PopTire"; Flag = "sdhkfgjhsdgfsdfh2s384783247";  De
     CallbackOnCreation = true;
 })
 
-Heli:CreateSliderToggle({Name = "Heli Speed"; SliderFlag = "dfdsfsdfshjvghjyuvgfhjghjgjhghgdsfdsfdsdfer"; ToggleFlag = "dfgdfdgdghdsjfgjksdfh";Min = 1;Max = 10;AllowOutOfRange = true;Digits = 2;SliderDefault = 1;ToggleDefault = false;
+Heli:CreateSliderToggle({Name = "Heli Speed"; SliderFlag = "dfdsfsdfshjvghjyuvgfhjghjgjhghgdsfdsfdsdfer"; ToggleFlag = "dfgdfdgdghdsjfgjksdfh";Min = 1;Max = 10;AllowOutOfRange = false;Digits = 2;SliderDefault = 1;ToggleDefault = false;
 	SliderCallback = function(newValue)
 		HeliSpeed = newValue
 	end;
@@ -660,7 +690,7 @@ Heli:CreateToggle({Name = "Heli Infinite Height"; Flag = "sdhkfgjhsdgdfsdfh33847
     CallbackOnCreation = true;
 })
 
-V:CreateSliderToggle({Name = "TurnSpeed"; SliderFlag = "dfsfsdfsdsfdsfdsdfer"; ToggleFlag = "dfghdsjfgjksdfh";Min = 1;Max = 5;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+V:CreateSliderToggle({Name = "TurnSpeed"; SliderFlag = "dfsfsdfsdsfdsfdsdfer"; ToggleFlag = "dfghdsjfgjksdfh";Min = 1;Max = 5;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 		TurnSpeedV = newValue
 	end;
@@ -672,7 +702,7 @@ V:CreateSliderToggle({Name = "TurnSpeed"; SliderFlag = "dfsfsdfsdsfdsfdsdfer"; T
 	CallbackOnCreation = true;
 })
 
-V:CreateSliderToggle({Name = "Height"; SliderFlag = "dfssdfsdfsdsfdsfdssdfer"; ToggleFlag = "dfghdsssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+V:CreateSliderToggle({Name = "Height"; SliderFlag = "dfssdfsdfsdsfdsfdssdfer"; ToggleFlag = "dfghdsssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 		HeightV = newValue
 	end;
@@ -684,7 +714,7 @@ V:CreateSliderToggle({Name = "Height"; SliderFlag = "dfssdfsdfsdsfdsfdssdfer"; T
 	CallbackOnCreation = true;
 })
 
-V:CreateSliderToggle({Name = "GarageBrakes"; SliderFlag = "dfssdfsdssfsdsfdsfdssdfer"; ToggleFlag = "dfghdssssssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+V:CreateSliderToggle({Name = "GarageBrakes"; SliderFlag = "dfssdfsdssfsdsfdsfdssdfer"; ToggleFlag = "dfghdssssssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 		GarageBrakesV = newValue
 	end;
@@ -696,7 +726,7 @@ V:CreateSliderToggle({Name = "GarageBrakes"; SliderFlag = "dfssdfsdssfsdsfdsfdss
 	CallbackOnCreation = true;
 })
 
-V:CreateSliderToggle({Name = "GarageEngineSpeed"; SliderFlag = "dfssdfsdssfsdsfdsfdsfsdfer"; ToggleFlag = "dfghdssfssssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = true;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+V:CreateSliderToggle({Name = "GarageEngineSpeed"; SliderFlag = "dfssdfsdssfsdsfdsfdsfsdfer"; ToggleFlag = "dfghdssfssssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 		GarageEngineSpeedV = newValue
 	end;
