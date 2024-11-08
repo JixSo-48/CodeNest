@@ -131,10 +131,6 @@ Client.GetClosestVehicle = function()
 	if Target then return Target end
 end
 
-Client.ServerHop = function()
-    Client.Main.ServerHop()
-end
-
 Client.CreatePath = function(Model, Position, Table)
     if Model and Position and Table then
         local Travel = PathfindingService:CreatePath(Table or {}) -- Telling the computer what we want in a table descriped below
@@ -255,7 +251,7 @@ spawn(function()
     while wait(4) and Arrest do
         local A, B = pcall(function()
             if not Client.GetBounty() then
-                Client.ServerHop()
+                Client.Main.ServerHop()
             end
         end)
         if not A then
@@ -281,14 +277,14 @@ spawn(function()
             end
             for i,v in next, Players:GetPlayers() do
                 if not table.find(Client.List, tostring(Client.Role(v, 3059674))) then
-                    Client.ServerHop()
+                    Client.Main.ServerHop()
                 end
             end
             if Player.PlayerGui:FindFirstChild("TeamSelectGui") then
-                Client.ServerHop()
+                Client.Main.ServerHop()
             end
             if Cursed == 20 then
-                Client.ServerHop()
+                Client.Main.ServerHop()
             end
         end)
     end
