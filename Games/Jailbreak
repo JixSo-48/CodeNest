@@ -31,9 +31,20 @@ local Client = {
 	Gun = require(ReplicatedStorage.Game.Item.Gun),
 	GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
 	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
+    Notification = require(ReplicatedStorage.Game.Notification),
 	Doors = {},
-	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
+	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))(),
+    WalkSpeed = 16,
+    JumpPower = 50,
 }
+Client.NotificationSystem = function(text)
+	Client.Notification.new(
+        {
+            Text=tostring(text),
+            Duration=3
+        }
+    )
+end
 local Guns = {
     "AK47",
     "Pistol",
@@ -94,6 +105,16 @@ OldNameCall = hookmetamethod(game, "__namecall", function(...)
         return
     end
     return OldNameCall(...)
+end)
+local OldNameCall
+OldNameCall = hookmetamethod(game, "__index", function(A, B, ...)
+    if not checkcaller() and (B == "WalkSpeed") then
+        return
+    end
+    if not checkcaller() and (B == "JumpPower") then
+        return
+    end
+    return OldNameCall(A, B, ...)
 end)
 
 Client.EditCar = function(Value, Number)
@@ -206,7 +227,7 @@ Client.KillDropNPC = function()
                         end
                     end
                 end
-           end
+            end
         end
     end
 end
@@ -222,6 +243,12 @@ local CheckTeam = function()
 			return "Police"
 		end
 	end
+end
+
+local Sethiddenproperty = function(A, B, C)
+    setthreadcontext(2)
+    sethiddenproperty(A, B, C)
+    setthreadcontext(8)
 end
 
 
@@ -247,7 +274,7 @@ Client.Yes = function(v)
 	if v:IsA("TouchTransmitter") then
 		if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
 			if v.Parent:IsA("BasePart") then
-				sethiddenproperty(v.Parent, "CanTouch", false)
+				Sethiddenproperty(v.Parent, "CanTouch", false)
 			end
 		end
 	end
@@ -387,16 +414,23 @@ spawn(function()
 end)
 
 RunService.Stepped:Connect(function()
-	if Client.EditCar() and Client.EditCar().Type == "Heli" and FastHei then
-		if Client.EditCar().Velocity then
-			Client.EditCar().Velocity.Velocity = Client.EditCar().Velocity.Velocity * HeliSpeed
-		end
-	end
-    if WalkSpeed then
-        Player.Character.Humanoid.WalkSpeed = Client.WalkSpeed
-    end
-    if JumpPower then
-        Player.Character.Humanoid.JumpPower = Client.JumpPower
+    local A, B = pcall(function()
+        if Player.Character:FindFirstChild("Humanoid") then
+            local Humanoid = Player.Character:FindFirstChildWhichIsA("Humanoid")
+            if Client.EditCar() and Client.EditCar().Type == "Heli" and FastHei then
+                if Client.EditCar().Velocity then
+                    Client.EditCar().Velocity.Velocity = Client.EditCar().Velocity.Velocity * HeliSpeed
+                end
+            end
+            if gethiddenproperty(Humanoid, "WalkSpeed") ~= tonumber(Client.WalkSpeed) then
+                Sethiddenproperty(Humanoid, "WalkSpeed", (DWalkSpeed and tonumber(Client.WalkSpeed)) or 25) 
+            elseif Humanoid.JumpPower ~= tonumber(Client.JumpPower) then
+                Sethiddenproperty(Humanoid, "JumpPower", (JumpPower and tonumber(Client.JumpPower)) or 50)
+            end
+        end
+    end)
+    if not A then
+        print(B)
     end
 end)
 
@@ -406,6 +440,8 @@ end
 game.DescendantAdded:Connect(function(v)
 	Client.Yes(v)
 end)
+
+Client.NotificationSystem("CodeNest")
 
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
@@ -636,19 +672,19 @@ Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "T
 	CallbackOnCreation = true;
 })
 
-Misc:CreateSliderToggle({Name = "WalkSpeed"; SliderFlag = "WalKSpeed"; ToggleFlag = "Toggle";Min = 1;Max = 120;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+Misc:CreateSliderToggle({Name = "WalkSpeed"; SliderFlag = "WalKSpeed"; ToggleFlag = "Toggdle";Min = 1;Max = 120;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 	    Client.WalkSpeed = newValue
 	end;
 	ToggleCallback = function(newValue) 
-		WalkSpeed = newValue
+		DWalkSpeed = newValue
 	end;
 	Warning = "This has a warning";
 	WarningIcon = 12345;
 	CallbackOnCreation = true;
 })
 
-Misc:CreateSliderToggle({Name = "JumpPower"; SliderFlag = "JumpPower"; ToggleFlag = "Toggle";Min = 1;Max = 250;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
+Misc:CreateSliderToggle({Name = "JumpPower"; SliderFlag = "JumpPower"; ToggleFlag = "Togdglse";Min = 1;Max = 250;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
 	SliderCallback = function(newValue)
 	    Client.JumpPower = newValue
 	end;
