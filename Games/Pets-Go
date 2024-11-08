@@ -212,9 +212,12 @@ Client.Upgrade = function()
 	end
 end
 Client.AutoCraft = function()
-	for i=1, 22 do
-		Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i})
+	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
+    for i=1, 22 do
+        Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+		Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
 	end
+    Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
 
 local Speed = Client.PlayerPet.CalculateSpeedMultiplier
