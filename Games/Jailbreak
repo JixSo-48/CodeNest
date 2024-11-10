@@ -328,7 +328,7 @@ end
 Client.Shoot = function()
     local Gun2 = Gun or "Pistol"
 	local Equip = Client.ItemSystem.GetLocalEquipped()
-	if Equip then
+	if Equip and GetClosestTargetOnOtherTeam() then
 		Client.Gun._attemptShoot(Equip, {})
 	end
 	if Player.Folder:FindFirstChild(Gun2) and GetClosestTargetOnOtherTeam() then
