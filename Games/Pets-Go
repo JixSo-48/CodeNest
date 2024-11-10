@@ -1,6 +1,6 @@
 math.randomseed(tick())
 local Services = setmetatable({}, {__index = function(Self, Index)
-	return game:GetService(Index)
+    return game:GetService(Index)
 end})
 local wait = task.wait
 local spawn = task.spawn
@@ -12,37 +12,37 @@ local CoreGui = Services.CoreGui
 local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
 local Client = {
-	Break = Workspace.__THINGS.Breakables,
-	Orbs = Workspace.__THINGS.Orbs,
-	Digsites = Workspace.__THINGS.Digging,
+    Break = Workspace.__THINGS.Breakables,
+    Orbs = Workspace.__THINGS.Orbs,
+    Digsites = Workspace.__THINGS.Digging,
     FlyingGifts = Workspace.__THINGS.FlyingGifts,
-	Gifts = getsenv(Player.PlayerScripts.Scripts.Game["Hidden Gifts"]),
-	Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
-	Network = require(ReplicatedStorage.Library.Client.Network),
+    Gifts = getsenv(Player.PlayerScripts.Scripts.Game["Hidden Gifts"]),
+    Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
+    Network = require(ReplicatedStorage.Library.Client.Network),
 }
 local BlackListed = {}
 local Coins = {}
 for i,v in next, Client.Break:GetChildren() do
-	if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
-		table.insert(Coins, tostring(v:GetAttributes().BreakableID))
-	end
+    if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
+        table.insert(Coins, tostring(v:GetAttributes().BreakableID))
+    end
 end
 for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
-	Client[v.Name] = require(v)
+    Client[v.Name] = require(v)
 end
 
 for i,v in next, getgc(true) do
-	if type(v) == "table" then
+    if type(v) == "table" then
         if rawget(v, "Click") then
             Client.ClickBreakable = v.Click
         end
     end
-	if type(v) == "function" and islclosure(v) then
-		if getinfo(v).name == "requestRelics" then
-			Client.requestRelics = v
-		elseif getinfo(v).name == "relicClicked" then
-			Client.relicClicked = v
-		elseif getfenv(v).script == Player.PlayerScripts.Scripts.Game.Fishing then
+    if type(v) == "function" and islclosure(v) then
+        if getinfo(v).name == "requestRelics" then
+            Client.requestRelics = v
+        elseif getinfo(v).name == "relicClicked" then
+            Client.relicClicked = v
+        elseif getfenv(v).script == Player.PlayerScripts.Scripts.Game.Fishing then
             if debug.info(v, "n") == "startFishing" then
                 Client.startFishing = v
             elseif debug.info(v, "n") == "stopFishing" then
@@ -54,14 +54,14 @@ for i,v in next, getgc(true) do
                 Client.Claim = v
             end
         end
-	end
+    end
 end
 Client.FireServer = function(Remote, ...)
-	Client.Network.Fire(Remote, unpack(...))
+    Client.Network.Fire(Remote, unpack(...))
 end
 
 Client.InvokeServer = function(Remote, ...)
-	Client.Network.Invoke(Remote, unpack(...))
+    Client.Network.Invoke(Remote, unpack(...))
 end
 
 Client.PurchaseFish = function()
@@ -93,80 +93,86 @@ end
 
 Client.Merchant = function()
     for i=1, 6 do
-    Client.InvokeServer("CustomMerchants_Purchase", {"StandardMerchant",i})
+        Client.InvokeServer("CustomMerchants_Purchase", {"StandardMerchant",i})
     end
 end
 
 Client.Vending = function()
-	local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
-	for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
-		local Vending = Workspace.MAP:FindFirstChild("Machines", true)
-		if Vending and Vending:FindFirstChild(require(v).MachineName) and not Vending[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible then
-			Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
-			for i=1, 5 do
-				Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
-			end
-			wait()
-		end
-	end
-	Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
+    local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
+    for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
+        local Vending = Workspace.MAP:FindFirstChild("Machines", true)
+        if Vending and Vending:FindFirstChild(require(v).MachineName) and not Vending[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible then
+            Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+            for i=1, 5 do
+                Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
+            end
+            wait()
+        end
+    end
+    Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
 end
 
 Client.GrabFruits = function()
-	for i,v in next, Client.Break:GetChildren() do
-		if v:FindFirstChild("base") then
-			local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
-			Player.Character.HumanoidRootPart.CFrame = v.base.Hitbox.CFrame
-			wait()
-			Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
-		end
-	end
-end
-Client.AntiAFK = function()
-	if Player.Idled then
-		for i,v in next, getconnections(Player.Idled) do
-			v:Disable()
-		end
-	end
-end
-Client.CollectRelics = function()
-	for i,v in next, getupvalue(Client.requestRelics, 1) do
-		Client.relicClicked(v)
-	end
-end
-Client.CollectGift = function()
-	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-	for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
-		Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
-		for i=1, 5 do
-			Client.Gifts.attemptClaim(v)
+    for i,v in next, Client.Break:GetChildren() do
+        if v:FindFirstChild("base") then
+            local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
+            Player.Character.HumanoidRootPart.CFrame = v.base.Hitbox.CFrame
+            wait()
+            Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
         end
-	end
-	Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
+    end
 end
+
+Client.AntiAFK = function()
+    if Player.Idled then
+        for i,v in next, getconnections(Player.Idled) do
+            v:Disable()
+        end
+    end
+end
+
+Client.CollectRelics = function()
+    for i,v in next, getupvalue(Client.requestRelics, 1) do
+        Client.relicClicked(v)
+    end
+end
+
+Client.CollectGift = function()
+    local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
+    for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
+        Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
+        for i=1, 5 do
+            Client.Gifts.attemptClaim(v)
+        end
+    end
+    Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
+end
+
 Client.Nearest = function()
-	local Target, MaxDistance = nil, math.huge
-	for i,v in next, Client.Break:GetChildren() do
-		local click = v:FindFirstChild("ClickDetector", true)
-		if v:IsA("Model") and v:FindFirstChildWhichIsA("BasePart") and not table.find(BlackListed, tostring(v:GetAttributes().BreakableID)) then
-			local Distance = (v:GetModelCFrame().Position - Player.Character.HumanoidRootPart.Position).magnitude
-			if Distance <= MaxDistance then
-				MaxDistance = Distance
-				Target = v
-			end
-		end
-	end
-	return Target
+    local Target, MaxDistance = nil, math.huge
+    for i,v in next, Client.Break:GetChildren() do
+        local click = v:FindFirstChild("ClickDetector", true)
+        if v:IsA("Model") and v:FindFirstChildWhichIsA("BasePart") and not table.find(BlackListed, tostring(v:GetAttributes().BreakableID)) then
+            local Distance = (v:GetModelCFrame().Position - Player.Character.HumanoidRootPart.Position).magnitude
+            if Distance <= MaxDistance then
+                MaxDistance = Distance
+                Target = v
+            end
+        end
+    end
+    return Target
 end
+
 Client.Fruit = function()
     if Client.Save.GetSaves()[Player].Inventory.Fruit then
-		for i,v in next, Client.Save.GetSaves()[Player].Inventory.Fruit do
-			if Client.FruitCmds.GetMaxConsume(i) ~= 0 then
-				Client.FruitCmds.Consume(i, 1)
-			end
-		end
-	end
+        for i,v in next, Client.Save.GetSaves()[Player].Inventory.Fruit do
+            if Client.FruitCmds.GetMaxConsume(i) ~= 0 then
+                Client.FruitCmds.Consume(i, 1)
+            end
+        end
+    end
 end
+
 Client.Collect = function()
     local FuckYou = Client.Orbs:GetChildren()
     local MyOrbs = {}
@@ -175,19 +181,19 @@ Client.Collect = function()
             MyOrbs[i] = tonumber(v.Name)
             v:Destroy()
         end
-		Client.FireServer("Orbs: Collect", {MyOrbs})
+        Client.FireServer("Orbs: Collect", {MyOrbs})
     end
 end
 
 Client.settarget = function(Coin)
-	if Coin then
-		Client.ClickBreakable:FireServer("Coin")
-		for i,v in next, Client.PlayerPet.GetAll() do
-			if tostring(v.owner) == Player.Name then
-				Client.PlayerPet.SetTarget(v, Coin)
-			end
-		end
-	end
+    if Coin then
+        Client.ClickBreakable:FireServer("Coin")
+        for i,v in next, Client.PlayerPet.GetAll() do
+            if tostring(v.owner) == Player.Name then
+                Client.PlayerPet.SetTarget(v, Coin)
+            end
+        end
+    end
 end
 
 Client.Fish = function()
@@ -204,51 +210,53 @@ Client.Fish = function()
 end
 
 Client.Dig = function()
-	local Pets = {}
-	for i,v in next, Client.PlayerPet.GetAll() do
-		if tostring(v.owner) == Player.Name then
-			for i2,v2 in next, getupvalue(Client.DiggingCmds.Target, 1) do
-				Client.InvokeServer("Digging_Target", {tonumber(v2.uid), tostring(v.euid)})
-				Client.InvokeServer("Digging_Claim", {tonumber(v2.uid)})
-			end
-		end
-	end
+    local Pets = {}
+    for i,v in next, Client.PlayerPet.GetAll() do
+        if tostring(v.owner) == Player.Name then
+            for i2,v2 in next, getupvalue(Client.DiggingCmds.Target, 1) do
+                Client.InvokeServer("Digging_Target", {tonumber(v2.uid), tostring(v.euid)})
+                Client.InvokeServer("Digging_Claim", {tonumber(v2.uid)})
+            end
+        end
+    end
 end
 
 Client.Potion = function()
-	if Client.Save.GetSaves()[Player].Inventory.Consumable then
-		for i,v in next, Client.Save.GetSaves()[Player].Inventory.Consumable do
-			Client.InvokeServer("Consumables_Consume",{i, 1})
-		end
-	end
+    if Client.Save.GetSaves()[Player].Inventory.Consumable then
+        for i,v in next, Client.Save.GetSaves()[Player].Inventory.Consumable do
+            Client.InvokeServer("Consumables_Consume",{i, 1})
+        end
+    end
 end
 
 Client.Upgrade = function()
-	for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
-		if not Client.UpgradeCmds.IsUnlocked(i) then
-			Client.UpgradeCmds.Unlock(i)
-		end
-	end
+    for i,v in next, getupvalue(Client.UpgradeCmds.IsUnlocked, 2) do
+        if not Client.UpgradeCmds.IsUnlocked(i) then
+            Client.UpgradeCmds.Unlock(i)
+        end
+    end
 end
+
 Client.AutoCraft = function()
-	local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-	if Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine") then
-		Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
-		for i=1, 50 do
-			Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, math.round(Client.PotionAmount) or 1})
-		end
-	end
+    local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
+    if Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine") then
+        Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+        for i=1, 50 do
+            Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, math.round(Client.PotionAmount) or 1})
+        end
+    end
     Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
 end
 
 local Speed = Client.PlayerPet.CalculateSpeedMultiplier
 Client.PlayerPet.CalculateSpeedMultiplier = function(...)
-	if not Speedy then
-		return Speed(...)
-	else
-		return math.huge
-	end
+    if not Speedy then
+        return Speed(...)
+    else
+        return math.huge
+    end
 end
+
 local Old = Client.stopFishing
 local L = Client.stopFishing
 L = hookfunction(Client.stopFishing, function(...)
@@ -260,12 +268,12 @@ L = hookfunction(Client.stopFishing, function(...)
 end)
 
 RunService.Heartbeat:Connect(function()
-	if Collect then
-		Client.Collect()
-	end
-	if Breakables then
-		Client.settarget(Client.Nearest())
-	end
+    if Collect then
+        Client.Collect()
+    end
+    if Breakables then
+        Client.settarget(Client.Nearest())
+    end
     if Roll3 then
         Client.InvokeServer("Eggs_Roll", {})
     end
@@ -278,29 +286,29 @@ RunService.Heartbeat:Connect(function()
 end)
 
 spawn(function()
-	while wait(5) do
+    while wait(5) do
         local A, B = pcall(function()
-			if Upgrade then
-				Client.Upgrade()
-			end
-			if AutoCraft then
-				Client.AutoCraft()
-			end
+            if Upgrade then
+                Client.Upgrade()
+            end
+            if AutoCraft then
+                Client.AutoCraft()
+            end
             if Vending then
                 Client.Vending()
             end
             if FishMerchant then
                 Client.PurchaseFish()
             end
-		end)
+        end)
         if not A then
             print(B)
         end
-	end
+    end
 end)
 
 spawn(function()
-	while wait() do
+    while wait() do
         local A, B = pcall(function()
             Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
             if Roll2 then
@@ -334,9 +342,11 @@ spawn(function()
         if not A then
             print(B)
         end
-	end
+    end
 end)
+
 Client.AntiAFK()
+
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
     Name = "CodeNest: " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
