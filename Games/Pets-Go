@@ -352,7 +352,7 @@ local UI = Atlas.new({
     Name = "CodeNest: " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
     ConfigFolder = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
     Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
-    Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
+    Color = Color3.fromRGB(255, 0, 0); -- theme color for UI (required)
     Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
     -- Atlas Loader:
     UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
@@ -362,8 +362,6 @@ local UI = Atlas.new({
     end;
     Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
 })
-
-
 
 local AutoRoll = UI:CreatePage("AutoRoll")
 local AutoRoll2 = AutoRoll:CreateSection("Features")
@@ -390,245 +388,323 @@ local hello = UI:CreatePage("Destroy UI")
 local Nig = hello:CreateSection("Destroy")
 
 
-FPS2:CreateToggle({Name = "Disable 3D Rendering"; Flag = "D3"; Default = false;
-	Callback = function(Value)
-		if Value then
-			RunService:Set3dRenderingEnabled(false)
-		elseif not Value then
-			RunService:Set3dRenderingEnabled(true)
-		end
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+FPS2:CreateToggle({
+    Name = "Disable 3D Rendering";
+    Flag = "D3";
+    Default = false;
+    Callback = function(Value)
+        if Value then
+            RunService:Set3dRenderingEnabled(false)
+        elseif not Value then
+            RunService:Set3dRenderingEnabled(true)
+        end
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-
-FPS2:CreateSliderToggle({Name = "FPS"; SliderFlag = "FPSFf"; ToggleFlag = "Toggle";Min = 5;Max = 240;AllowOutOfRange = true;Digits = 2;SliderDefault = 100;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		if YesFPS then
-			setfpscap(tonumber(newValue))
-		end
-	end;
-	ToggleCallback = function(newValue) 
-		YesFPS = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
+FPS2:CreateSliderToggle({
+    Name = "FPS";
+    SliderFlag = "FPSFf";
+    ToggleFlag = "Toggle";
+    Min = 5;
+    Max = 240;
+    AllowOutOfRange = true;
+    Digits = 2;
+    SliderDefault = 100;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        if YesFPS then
+            setfpscap(tonumber(newValue))
+        end
+    end;
+    ToggleCallback = function(newValue) 
+        YesFPS = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
 })
 
 local Item = Coins2:CreateDropdown({ 
-	Name = "Coin types"; -- required: name of element
-	Callback = function(v) 
-		table.insert(BlackListed, v) 
-	end;
-	Options = Coins;
-	ItemSelecting = true; 
-	DefaultItemSelected = "";
-	Warning = "This has a warning";
-	WarningIcon = 12345;
+    Name = "Coin types"; -- required: name of element
+    Callback = function(v) 
+        table.insert(BlackListed, v) 
+    end;
+    Options = Coins;
+    ItemSelecting = true; 
+    DefaultItemSelected = "";
+    Warning = "This has a warning";
+    WarningIcon = 12345;
 })
+
 local Item2 = Coins2:CreateDropdown({ 
-	Name = "BlackListed Coin Types"; -- required: name of element
-	Callback = function(v) 
-		table.remove(BlackListed, tonumber(v))
-	end;
-	Options = BlackListed;
-	ItemSelecting = true; 
-	DefaultItemSelected = "";
-	Warning = "This has a warning";
-	WarningIcon = 12345;
+    Name = "BlackListed Coin Types"; -- required: name of element
+    Callback = function(v) 
+        table.remove(BlackListed, tonumber(v))
+    end;
+    Options = BlackListed;
+    ItemSelecting = true; 
+    DefaultItemSelected = "";
+    Warning = "This has a warning";
+    WarningIcon = 12345;
 })
 
 spawn(function()
-	while wait() do  
-		for i,v in next, Client.Break:GetChildren() do
-			if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
-				table.insert(Coins, tostring(v:GetAttributes().BreakableID))
-			end
-		end
-		Item:Update(Coins)
-		Item2:Update(BlackListed)
-		wait()
-	end
+    while wait() do  
+        for i, v in next, Client.Break:GetChildren() do
+            if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
+                table.insert(Coins, tostring(v:GetAttributes().BreakableID))
+            end
+        end
+        Item:Update(Coins)
+        Item2:Update(BlackListed)
+        wait()
+    end
 end)
 
-AutoRoll2:CreateToggle({Name = "Auto Roll"; Flag = "asdfsdfddddddddddfdsfdsf"; Default = false;
-	Callback = function(Value)
-		Roll3 = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-AutoRoll2:CreateToggle({Name = "Auto Claim Bonus Roll"; Flag = "asdfsdfdfdsdfdsf"; Default = false;
-	Callback = function(Value)
-		Roll2 = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-AutoRoll2:CreateToggle({Name = "Auto Fish"; Flag = "asdfsdfddsad22fdsdfdsf"; Default = false;
-	Callback = function(Value)
-		StartFishing = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+AutoRoll2:CreateToggle({
+    Name = "Auto Roll";
+    Flag = "asdfsdfddddddddddfdsfdsf";
+    Default = false;
+    Callback = function(Value)
+        Roll3 = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Merchant2:CreateToggle({Name = "Auto Grab Merchant Buyable items"; Flag = "asdffsdfdasdhgfdsfdsf"; Default = false;
-	Callback = function(Value)
-		Mer = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-Coins2:CreateToggle({Name = "Auto Grab Spawned Fruits"; Flag = "asdffsdfdfdsfdsf"; Default = false;
-	Callback = function(Value)
-		GrabFruits = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+AutoRoll2:CreateToggle({
+    Name = "Auto Claim Bonus Roll";
+    Flag = "asdfsdfdfdsdfdsf";
+    Default = false;
+    Callback = function(Value)
+        Roll2 = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-
-Misc:CreateToggle({Name = "Auto Vending Machine"; Flag = "asdffsdcxfdfdsfdsf"; Default = false;
-	Callback = function(Value)
-		Vending = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+AutoRoll2:CreateToggle({
+    Name = "Auto Fish";
+    Flag = "asdfsdfddsad22fdsdfdsf";
+    Default = false;
+    Callback = function(Value)
+        StartFishing = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Coins2:CreateToggle({Name = "Auto Gifts"; Flag = "asdfgdgdffsdfdfdsfdsf"; Default = false;
-	Callback = function(Value)
-		Gifts = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-Coins2:CreateToggle({Name = "Auto Pop Bloons"; Flag = "asdddd234324fgdgdffsdfdfdsfdsf"; Default = false;
-	Callback = function(Value)
-		Bloons = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Merchant2:CreateToggle({
+    Name = "Auto Grab Merchant Buyable items";
+    Flag = "asdffsdfdasdhgfdsfdsf";
+    Default = false;
+    Callback = function(Value)
+        Mer = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Merchant2:CreateToggle({Name = "Auto Purchase FishMerchant"; Flag = "asdddd234324fgdgdffsdfdfdssdfsdfsdfsdffdsf"; Default = false;
-	Callback = function(Value)
-		FishMerchant = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Coins2:CreateToggle({
+    Name = "Auto Grab Spawned Fruits";
+    Flag = "asdffsdfdfdsfdsf";
+    Default = false;
+    Callback = function(Value)
+        GrabFruits = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Fruits2:CreateToggle({Name = "Auto Eat All Fruits"; Flag = "asdfsdfdsf"; Default = false;
-	Callback = function(Value)
-		Fruit = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Misc:CreateToggle({
+    Name = "Auto Vending Machine";
+    Flag = "asdffsdcxfdfdsfdsf";
+    Default = false;
+    Callback = function(Value)
+        Vending = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Pots2:CreateToggle({Name = "Auto Use All Potions"; Flag = "asdfshgfhdfdsf"; Default = false;
-	Callback = function(Value)
-		Potion = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Coins2:CreateToggle({
+    Name = "Auto Gifts";
+    Flag = "asdfgdgdffsdfdfdsfdsf";
+    Default = false;
+    Callback = function(Value)
+        Gifts = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Pots2:CreateToggle({Name = "Auto Craft Pots"; Flag = "asddfgdfgfsdfdfdsfdsf"; Default = false;
-	Callback = function(Value)
-		AutoCraft = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Coins2:CreateToggle({
+    Name = "Auto Pop Bloons";
+    Flag = "asdddd234324fgdgdffsdfdfdsfdsf";
+    Default = false;
+    Callback = function(Value)
+        Bloons = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Pots2:CreateSliderToggle({Name = "Craft amount of potions"; SliderFlag = "dfssdfsdssfsdfsdfsdfsfdsfdssdfer"; ToggleFlag = "dfghdssssssjfgjksdsdfsdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		Client.PotionAmount = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		AutoCraft = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-
-Coins2:CreateToggle({Name = "Auto Dig"; Flag = "a"; Default = false;
-	Callback = function(Value)
-		Dig = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Merchant2:CreateToggle({
+    Name = "Auto Purchase FishMerchant";
+    Flag = "asdddd234324fgdgdffsdfdfdssdfsdfsdfsdffdsf";
+    Default = false;
+    Callback = function(Value)
+        FishMerchant = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Coins2:CreateToggle({Name = "Auto Breakables"; Flag = "ab"; Default = false;
-	Callback = function(Value)
-		Breakables = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Fruits2:CreateToggle({
+    Name = "Auto Eat All Fruits";
+    Flag = "asdfsdfdsf";
+    Default = false;
+    Callback = function(Value)
+        Fruit = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Coins2:CreateToggle({Name = "Auto Collect"; Flag = "abc"; Default = false;
-	Callback = function(Value)
-		Collect = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Pots2:CreateToggle({
+    Name = "Auto Use All Potions";
+    Flag = "asdfshgfhdfdsf";
+    Default = false;
+    Callback = function(Value)
+        Potion = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Coins2:CreateToggle({Name = "Auto Upgrade"; Flag = "abcd"; Default = false;
-	Callback = function(Value)
-		Upgrade = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Pots2:CreateToggle({
+    Name = "Auto Craft Pots";
+    Flag = "asddfgdfgfsdfdfdsfdsf";
+    Default = false;
+    Callback = function(Value)
+        AutoCraft = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
-Coins2:CreateToggle({Name = "Pet Infinite Speed"; Flag = "abcde"; Default = false;
-	Callback = function(Value)
-		Speedy = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Pots2:CreateSliderToggle({
+    Name = "Craft amount of potions";
+    SliderFlag = "dfssdfsdssfsdfsdfsdfsfdsfdssdfer";
+    ToggleFlag = "dfghdssssssjfgjksdsdfsdfh";
+    Min = 1;
+    Max = 30;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        Client.PotionAmount = newValue
+    end;
+    ToggleCallback = function(newValue) 
+        AutoCraft = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
-Coins2:CreateToggle({Name = "Auto Relics"; Flag = "abcdfsdfsdfe"; Default = false;
-	Callback = function(Value)
-		Relics = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+Coins2:CreateToggle({
+    Name = "Auto Dig";
+    Flag = "a";
+    Default = false;
+    Callback = function(Value)
+        Dig = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Coins2:CreateToggle({
+    Name = "Auto Breakables";
+    Flag = "ab";
+    Default = false;
+    Callback = function(Value)
+        Breakables = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Coins2:CreateToggle({
+    Name = "Auto Collect";
+    Flag = "abc";
+    Default = false;
+    Callback = function(Value)
+        Collect = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Coins2:CreateToggle({
+    Name = "Auto Upgrade";
+    Flag = "abcd";
+    Default = false;
+    Callback = function(Value)
+        Upgrade = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Coins2:CreateToggle({
+    Name = "Pet Infinite Speed";
+    Flag = "abcde";
+    Default = false;
+    Callback = function(Value)
+        Speedy = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Coins2:CreateToggle({
+    Name = "Auto Relics";
+    Flag = "abcdfsdfsdfe";
+    Default = false;
+    Callback = function(Value)
+        Relics = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
 
 Nig:CreateButton({
-	Name = "Destroy?"; -- required: name of element
-	Callback = function()  -- required: function to be called when button is pressed
-		UI:Destroy()
-	end
+    Name = "Destroy?";  -- required: name of element
+    Callback = function()  -- required: function to be called when button is pressed
+        UI:Destroy()
+    end;
 })
+
