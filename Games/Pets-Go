@@ -38,19 +38,21 @@ for i,v in next, getgc(true) do
         end
     end
     if type(v) == "function" and islclosure(v) then
-        if getinfo(v).name == "requestRelics" then
+        local Script = getfenv(v).script
+        local Name = debug.getinfo(v, "n")
+        if Name == "requestRelics" then
             Client.requestRelics = v
-        elseif getinfo(v).name == "relicClicked" then
+        elseif Name == "relicClicked" then
             Client.relicClicked = v
-        elseif getfenv(v).script == Player.PlayerScripts.Scripts.Game.Fishing then
-            if debug.info(v, "n") == "startFishing" then
+        elseif Script == Player.PlayerScripts.Scripts.Game.Fishing then
+            if Name == "startFishing" then
                 Client.startFishing = v
-            elseif debug.info(v, "n") == "stopFishing" then
+            elseif Name == "stopFishing" then
                 Client.stopFishing = v
                 Client.Old = v
             end
-        elseif getfenv(v).script == Player.PlayerScripts.Scripts.Game["Flying Gifts"] then
-            if debug.info(v, "n") == "claim" then
+        elseif Script == Player.PlayerScripts.Scripts.Game["Flying Gifts"] then
+            if Name == "claim" then
                 Client.Claim = v
             end
         end
@@ -198,14 +200,16 @@ end
 
 Client.Fish = function()
     local H = Workspace.MAP.INTERACT:FindFirstChild("FishingPads")
-    if not Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
-        Client.startFishing(Workspace.MAP.INTERACT.FishingPads.FishingBillboard)
-    end
-    Client.InvokeServer("Fishing_Fish", {})
-    wait()
-    Client.FireServer("Fishing_Success", {})
-    if not StartFishing and Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
-        Client.Old()
+    if H then
+        if not Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
+            Client.startFishing(Workspace.MAP.INTERACT.FishingPads.FishingBillboard)
+        end
+        Client.InvokeServer("Fishing_Fish", {})
+        wait()
+        Client.FireServer("Fishing_Success", {})
+        if not StartFishing and Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
+            Client.Old()
+        end
     end
 end
 
@@ -266,85 +270,6 @@ L = hookfunction(Client.stopFishing, function(...)
         return L(...)
     end
 end)
-
-RunService.Heartbeat:Connect(function()
-    if Collect then
-        Client.Collect()
-    end
-    if Breakables then
-        Client.settarget(Client.Nearest())
-    end
-    if Roll3 then
-        Client.InvokeServer("Eggs_Roll", {})
-    end
-    if StartFishing then
-        Client.Fish()
-    end
-    if Bloons then
-        Client.Bloons()
-    end
-end)
-
-spawn(function()
-    while wait(5) do
-        local A, B = pcall(function()
-            if Upgrade then
-                Client.Upgrade()
-            end
-            if AutoCraft then
-                Client.AutoCraft()
-            end
-            if Vending then
-                Client.Vending()
-            end
-            if FishMerchant then
-                Client.PurchaseFish()
-            end
-        end)
-        if not A then
-            print(B)
-        end
-    end
-end)
-
-spawn(function()
-    while wait() do
-        local A, B = pcall(function()
-            Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
-            if Roll2 then
-                Client.InvokeServer("Bonus Rolls: Claim", {})
-            end
-            if Gifts then
-                Client.CollectGift()
-            end
-            if GrabFruits then
-                Client.GrabFruits()
-            end
-            if Potion then
-                Client.Potion()
-            end
-            if Dig then
-                Client.Dig()
-            end
-            if Collect then
-                Client.Collect()
-            end
-            if Breakables then
-                Client.settarget(Client.Nearest())
-            end
-            if Fruit then
-                Client.Fruit()
-            end
-            if Relics then
-                Client.CollectRelics()
-            end
-        end)
-        if not A then
-            print(B)
-        end
-    end
-end)
-
 Client.AntiAFK()
 
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
@@ -400,7 +325,7 @@ FPS2:CreateToggle({
         end
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -419,7 +344,7 @@ FPS2:CreateSliderToggle({
             setfpscap(tonumber(newValue))
         end
     end;
-    ToggleCallback = function(newValue) 
+    ToggleCallback = function(newValue)
         YesFPS = newValue
     end;
     Warning = "This has a warning";
@@ -427,42 +352,29 @@ FPS2:CreateSliderToggle({
     CallbackOnCreation = true;
 })
 
-local Item = Coins2:CreateDropdown({ 
+local Item = Coins2:CreateDropdown({
     Name = "Coin types"; -- required: name of element
-    Callback = function(v) 
-        table.insert(BlackListed, v) 
+    Callback = function(v)
+        table.insert(BlackListed, v)
     end;
     Options = Coins;
-    ItemSelecting = true; 
+    ItemSelecting = true;
     DefaultItemSelected = "";
     Warning = "This has a warning";
     WarningIcon = 12345;
 })
 
-local Item2 = Coins2:CreateDropdown({ 
+local Item2 = Coins2:CreateDropdown({
     Name = "BlackListed Coin Types"; -- required: name of element
-    Callback = function(v) 
+    Callback = function(v)
         table.remove(BlackListed, tonumber(v))
     end;
     Options = BlackListed;
-    ItemSelecting = true; 
+    ItemSelecting = true;
     DefaultItemSelected = "";
     Warning = "This has a warning";
     WarningIcon = 12345;
 })
-
-spawn(function()
-    while wait() do  
-        for i, v in next, Client.Break:GetChildren() do
-            if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
-                table.insert(Coins, tostring(v:GetAttributes().BreakableID))
-            end
-        end
-        Item:Update(Coins)
-        Item2:Update(BlackListed)
-        wait()
-    end
-end)
 
 AutoRoll2:CreateToggle({
     Name = "Auto Roll";
@@ -472,7 +384,7 @@ AutoRoll2:CreateToggle({
         Roll3 = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -484,7 +396,7 @@ AutoRoll2:CreateToggle({
         Roll2 = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -496,7 +408,7 @@ AutoRoll2:CreateToggle({
         StartFishing = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -508,7 +420,7 @@ Merchant2:CreateToggle({
         Mer = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -520,7 +432,7 @@ Coins2:CreateToggle({
         GrabFruits = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -532,7 +444,7 @@ Misc:CreateToggle({
         Vending = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -544,7 +456,7 @@ Coins2:CreateToggle({
         Gifts = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -556,7 +468,7 @@ Coins2:CreateToggle({
         Bloons = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -568,7 +480,7 @@ Merchant2:CreateToggle({
         FishMerchant = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -580,7 +492,7 @@ Fruits2:CreateToggle({
         Fruit = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -592,7 +504,7 @@ Pots2:CreateToggle({
         Potion = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -604,7 +516,7 @@ Pots2:CreateToggle({
         AutoCraft = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -621,7 +533,7 @@ Pots2:CreateSliderToggle({
     SliderCallback = function(newValue)
         Client.PotionAmount = newValue
     end;
-    ToggleCallback = function(newValue) 
+    ToggleCallback = function(newValue)
         AutoCraft = newValue
     end;
     Warning = "This has a warning";
@@ -637,7 +549,7 @@ Coins2:CreateToggle({
         Dig = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -649,7 +561,7 @@ Coins2:CreateToggle({
         Breakables = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -661,7 +573,7 @@ Coins2:CreateToggle({
         Collect = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -673,7 +585,7 @@ Coins2:CreateToggle({
         Upgrade = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -685,7 +597,7 @@ Coins2:CreateToggle({
         Speedy = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -697,7 +609,7 @@ Coins2:CreateToggle({
         Relics = Value
     end;
     Warning = "";
-    WarningIcon = 12345; 
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -708,3 +620,78 @@ Nig:CreateButton({
     end;
 })
 
+RunService.RenderStepped:Connect(function()
+    local A, B = pcall(function()
+        if Ticks.Tick1 - tick() >= 0.1 then
+            Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
+            if Roll2 then
+                Client.InvokeServer("Bonus Rolls: Claim", {})
+            end
+            if Gifts then
+                Client.CollectGift()
+            end
+            if GrabFruits then
+                Client.GrabFruits()
+            end
+            if Potion then
+                Client.Potion()
+            end
+            if Dig then
+                Client.Dig()
+            end
+            if Collect then
+                Client.Collect()
+            end
+            if Breakables then
+                Client.settarget(Client.Nearest())
+            end
+            if Fruit then
+                Client.Fruit()
+            end
+            if Relics then
+                Client.CollectRelics()
+            end
+        end
+        if Ticks.NoTick - tick() >= 0 then
+            if Collect then
+                Client.Collect()
+            end
+            if Breakables then
+                Client.settarget(Client.Nearest())
+            end
+            if Roll3 then
+                Client.InvokeServer("Eggs_Roll", {})
+            end
+            if StartFishing then
+                Client.Fish()
+            end
+            if Bloons then
+                Client.Bloons()
+            end
+        end
+        if Ticks.Tick5 - tick()  >= 5 then
+            if Upgrade then
+                Client.Upgrade()
+            end
+            if AutoCraft then
+                Client.AutoCraft()
+            end
+            if Vending then
+                Client.Vending()
+            end
+            if FishMerchant then
+                Client.PurchaseFish()
+            end
+            for i, v in next, Client.Break:GetChildren() do
+                if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
+                    table.insert(Coins, tostring(v:GetAttributes().BreakableID))
+                end
+            end
+            Item:Update(Coins)
+            Item2:Update(BlackListed)
+        end
+    end)
+    if not A then
+        print(B)
+    end
+end)
