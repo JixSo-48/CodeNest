@@ -1,3 +1,4 @@
+
 math.randomseed(tick())
 local G = getgenv and getgenv()
 if G then
@@ -304,16 +305,28 @@ Client.Yes = function(v)
         end
     end
 end
-
+Client.GetBoss = function()
+    local Boss = Workspace.MansionRobbery:FindFirstChild("ActiveBoss")
+    if Boss then
+        if Client.Main.Mag(Player.Character.Humanoid.RootPart, Boss.Head) < 100 then
+            return Boss
+        end
+    end
+end
 local Ray = require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
 require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList = function(...)
     local Args = {Ray(...)}
+    local Boss = Client.GetBoss()
     local C = GetClosestTargetOnOtherTeam()
-    if tostring(getfenv(2).script) == "BulletEmitter" and C and C.Character then
-        if Toggle or Kill then
-            Args[1] = C.Character.HumanoidRootPart
-            Args[2] = C.Character.HumanoidRootPart.Position
-            Args[3] = C.Character.HumanoidRootPart.Position
+    if Toggle or Kill then
+        if tostring(getfenv(2).script) == "BulletEmitter" and C and C.Character then
+            Args[1] = C.Character.Head
+            Args[2] = C.Character.Head.Position
+            Args[3] = C.Character.Head.Position
+            return unpack(Args)
+        elseif Boss and tostring(getfenv(2).script) == "BulletEmitter" then
+            Args[1] = Boss.Head
+            Args[2] = Boss.Head.Position
             return unpack(Args)
         end
     end
@@ -346,15 +359,21 @@ end
 Client.Shoot = function()
     local Gun2 = Gun or "Pistol"
     local Equip = Client.ItemSystem.GetLocalEquipped()
-    if Equip and GetClosestTargetOnOtherTeam() then
+    if Equip then
         if Equip.Model then
-            Client.Gun._attemptShoot(Equip)
+            if GetClosestTargetOnOtherTeam() or Client.GetBoss() then
+                Client.Gun._attemptShoot(Equip)
+            end
         end
     end
-    if Player.Folder:FindFirstChild(Gun2) and GetClosestTargetOnOtherTeam() then
-        Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
-    elseif Equip and not GetClosestTargetOnOtherTeam() then
-        Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
+    if Player.Folder:FindFirstChild(Gun2) then
+        if Client.GetBoss() or GetClosestTargetOnOtherTeam() then
+            Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
+        end
+    elseif Equip then
+        if not Client.GetBoss() or not GetClosestTargetOnOtherTeam() then
+            Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
+        end
     elseif not Player.Folder:FindFirstChild(Gun2) then
         Client.GetAllGuns()
     end
