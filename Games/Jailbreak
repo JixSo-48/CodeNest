@@ -67,7 +67,7 @@ local Names = {
     "LaserWall",
     "LaserCarousel",
     "Spotlight",
-    "Darts", 
+    "Darts",
     "Plank",
     "InnerModel",
     "Tile",
@@ -152,7 +152,7 @@ end
 
 Client.Teleport = function(CFrame)
     Player.Character.Humanoid.Health = 0
-    repeat wait() until Player.Character.Humanoid.Health ~= 0 and Player.Character:FindFirstChild("HumanoidRootPart") 
+    repeat wait() until Player.Character.Humanoid.Health ~= 0 and Player.Character:FindFirstChild("HumanoidRootPart")
     Player.Character.HumanoidRootPart.CFrame = CFrame
 end
 
@@ -347,9 +347,9 @@ Client.Shoot = function()
     local Gun2 = Gun or "Pistol"
     local Equip = Client.ItemSystem.GetLocalEquipped()
     if Equip and GetClosestTargetOnOtherTeam() then
-		if Equip.Model then
-        	Client.Gun._attemptShoot(Equip)
-		end
+        if Equip.Model then
+            Client.Gun._attemptShoot(Equip)
+        end
     end
     if Player.Folder:FindFirstChild(Gun2) and GetClosestTargetOnOtherTeam() then
         Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
@@ -806,10 +806,10 @@ V:CreateToggle({
 })
 
 Nig:CreateButton({
-	Name = "Destroy?"; -- required: name of element
-	Callback = function()  -- required: function to be called when button is pressed
-		UI:Destroy()
-	end
+    Name = "Destroy?"; -- required: name of element
+    Callback = function()  -- required: function to be called when button is pressed
+        UI:Destroy()
+    end
 })
 ---- Loops
 RunService.Stepped:Connect(function()
@@ -895,8 +895,8 @@ RunService.Stepped:Connect(function()
                 MasterTicks.CarTick = tick()
             end
         end
-		if tick() - MasterTicks.Wait5 >= 5 then
-			if Autoespcaue then
+        if tick() - MasterTicks.Wait5 >= 5 then
+            if Autoespcaue then
                 Client.AutoEscape()
             end
             if OpenAllDoorsdoor then
@@ -905,15 +905,15 @@ RunService.Stepped:Connect(function()
             if CollectAirDropsForMe then
                 Client.AirDropCollect()
             end
-			for _,v in next, Players:GetPlayers() do
-				if v ~= Player and not table.find(PlayersTable, v.Name) then
-					table.insert(PlayersTable, v.Name)
-				end
-			end
-			PlayerTable:Update(PlayersTable)
-			PlayerTable2:Update(WhiteListed)
+            for _,v in next, Players:GetPlayers() do
+                if v ~= Player and not table.find(PlayersTable, v.Name) then
+                    table.insert(PlayersTable, v.Name)
+                end
+            end
+            PlayerTable:Update(PlayersTable)
+            PlayerTable2:Update(WhiteListed)
             MasterTicks.Wait5 = tick()
-		end
+        end
     end)
     if not A then
         print(B)
