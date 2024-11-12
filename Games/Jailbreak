@@ -6,39 +6,39 @@ if G then
     G.warn = warn
 end
 local Services = setmetatable({}, {__index = function(Self, Service)
-     return game:GetService(Service)
+    return game:GetService(Service)
 end})
 local ReplicatedStorage = Services.ReplicatedStorage
 local Players = Services.Players
 local RunService = Services.RunService
 local Workspace = Services.Workspace
-local UserInputService = Services.UserInputService
-local CoreGui = Services.CoreGui
-local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
 local Client = {
-	DartDispenser = require(ReplicatedStorage.Game.DartDispenser.DartDispenser),
-	MilitaryTurret = require(ReplicatedStorage.Game.MilitaryTurret.MilitaryTurret),
-	Turret = require(ReplicatedStorage.Turret2.Turret),
-	Settings = require(ReplicatedStorage.Resource.Settings),
-	PlayerUtils = require(ReplicatedStorage.Game.PlayerUtils),
-	InventoryItemSystem = require(ReplicatedStorage.Inventory.InventoryItemSystem),
-	TagUtils = require(ReplicatedStorage.Tag.TagUtils),
-	ControlModule = require(Player.PlayerScripts.PlayerModule.ControlModule),
-	RobberyConsts = require(ReplicatedStorage.Robbery.RobberyConsts),
-	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
-	ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
-	Gun = require(ReplicatedStorage.Game.Item.Gun),
-	GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
-	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
+    DartDispenser = require(ReplicatedStorage.Game.DartDispenser.DartDispenser),
+    MilitaryTurret = require(ReplicatedStorage.Game.MilitaryTurret.MilitaryTurret),
+    Turret = require(ReplicatedStorage.Turret2.Turret),
+    Settings = require(ReplicatedStorage.Resource.Settings),
+    PlayerUtils = require(ReplicatedStorage.Game.PlayerUtils),
+    InventoryItemSystem = require(ReplicatedStorage.Inventory.InventoryItemSystem),
+    TagUtils = require(ReplicatedStorage.Tag.TagUtils),
+    ControlModule = require(Player.PlayerScripts.PlayerModule.ControlModule),
+    RobberyConsts = require(ReplicatedStorage.Robbery.RobberyConsts),
+    ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
+    ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
+    Gun = require(ReplicatedStorage.Game.Item.Gun),
+    GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
+    ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
     Notification = require(ReplicatedStorage.Game.Notification),
-	Doors = {},
-	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))(),
+    Falling = require(ReplicatedStorage.Game.Falling),
+    Doors = {},
+    Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))(),
     WalkSpeed = 16,
     JumpPower = 50,
+    TaskTick = tick()
 }
+Client.ItemSystem.GetLocalEquipped()
 Client.NotificationSystem = function(text)
-	Client.Notification.new(
+    Client.Notification.new(
         {
             Text=tostring(text),
             Duration=3
@@ -54,47 +54,63 @@ local Guns = {
 local PlayersTable = {}
 local Drops = {}
 local Names = {
-	"Camera",
-	"Laser",
-	"Lasers",
-	"Spikes",
-	"LavaKill",
-	"BarbedWire",
-	"Piston",
-	"PowerWire",
-	"LaserGround",
-	"1_Classic",
-	"LaserWall",
-	"LaserCarousel",
-	"Spotlight",
-	"Darts", 
-	"Plank",
-	"InnerModel",
-	"Tile",
-	"Wood",
-	"2_StorageAndMeeting",
-	"5_TheCEO",
+    "Camera",
+    "Laser",
+    "Lasers",
+    "Spikes",
+    "LavaKill",
+    "BarbedWire",
+    "Piston",
+    "PowerWire",
+    "LaserGround",
+    "1_Classic",
+    "LaserWall",
+    "LaserCarousel",
+    "Spotlight",
+    "Darts", 
+    "Plank",
+    "InnerModel",
+    "Tile",
+    "Wood",
+    "2_StorageAndMeeting",
+    "5_TheCEO",
     "3_ExpandedStore"
 }
-
+local MasterTicks = {
+    CarTick = tick(),
+    NPCSTick = tick(),
+    RawSetTick = tick(),
+    KillTick = tick(),
+    PressTick = tick(),
+    Wait5 = tick()
+}
 local WhiteListed = {}
-local Parts = {}
-local Labels = {}
-local OldScript = OldScript or require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
+
 for i,v in next, getgc(true) do
     if type(v) == "table" then
         if rawget(v, "FireServer") then
             Client.Network = v
         elseif rawget(v, "GetLocalVehiclePacket") then
-			Client.GetLocalVehiclePacket = v.GetLocalVehiclePacket
-		end
-	elseif typeof(v) == 'function' and islclosure(v) then
+            Client.GetLocalVehiclePacket = v.GetLocalVehiclePacket
+        end
+    elseif typeof(v) == 'function' and islclosure(v) then
+        local Name = debug.info(v, "n")
         if table.find(getconstants(v), 'SequenceRequireState') then
             Client.Door = v
-		elseif debug.info(v, "n") == "CheatCheck" then
-			AntiCheat = v
-        elseif debug.info(v, "n") == "WalkSpeedFun" then
+        elseif Name == "CheatCheck" then
+            AntiCheat = v
+        elseif Name == "WalkSpeedFun" then
             WalkSpeedFun = v
+        elseif Name == "ShootRocket" then
+
+        elseif Name == "_fire" then
+            hookfunction(v, function(...)
+                return
+            end)
+        elseif Name == "ShootLaser" then
+            hookfunction(v, function()
+                return
+            end)
         end
     end
 end
@@ -127,18 +143,17 @@ OldNameCall = hookmetamethod(game, "__index", function(A, B, ...)
 end)
 
 Client.EditCar = function(Value, Number)
-	local packet = Client.GetLocalVehiclePacket(Player)
-	if packet and Value and Number then
-		packet[Value] = Number
-	end
-	return packet
+    local packet = Client.GetLocalVehiclePacket(Player)
+    if packet and Value and Number then
+        packet[Value] = Number
+    end
+    return packet
 end
 
-
 Client.Teleport = function(CFrame)
-	Player.Character.Humanoid.Health = 0
-	repeat wait() until Player.Character.Humanoid.Health ~= 0 and Player.Character:FindFirstChild("HumanoidRootPart") 
-	Player.Character.HumanoidRootPart.CFrame = CFrame
+    Player.Character.Humanoid.Health = 0
+    repeat wait() until Player.Character.Humanoid.Health ~= 0 and Player.Character:FindFirstChild("HumanoidRootPart") 
+    Player.Character.HumanoidRootPart.CFrame = CFrame
 end
 
 Client.GetBank = function()
@@ -149,52 +164,56 @@ Client.AutoEscape = function()
     if Player.Team.Name == "Prisoner" or not Player.Character then
         if Player.PlayerGui.MainGui.CellTime.Visible then
             repeat
-            	wait(1)
+                wait(1)
             until not Player.PlayerGui.MainGui.CellTime.Visible
             wait(1)
         end
-		Client.Teleport(CFrame.new(0,500,0))
-	end
+        Client.Teleport(CFrame.new(0,500,0))
+    end
 end
 
 Client.OpenAllDoors = function()
-	local Table = getgc(true)
-	for i,v in next, Table do
-		if type(v) == "table" and rawget(v, "CloseFun") and rawget(v, "Model") and rawget(v, "State") then
-			Client.Door(v)
-		end
-	end
+    local Table = getgc(true)
+    for i,v in next, Table do
+        if type(v) == "table" and rawget(v, "CloseFun") and rawget(v, "Model") and rawget(v, "State") then
+            Client.Door(v)
+        end
+    end
 end
 
 Client.EditCar = function(Value, Number)
-	local packet = Client.GetLocalVehiclePacket(Player)
-	if packet and Value and Number then
-		packet[Value] = Number
-	end
-	return packet
+    local packet = Client.GetLocalVehiclePacket(Player)
+    if packet and Value and Number then
+        packet[Value] = Number
+    end
+    return packet
 end
-
-Client.DartDispenser._fire = function() return end
-
-Client.MilitaryTurret._fire = function() return end
-Client.Turret._fire = function() return end
 
 local Old = Client.TagUtils.isPointInTag
 Client.TagUtils.isPointInTag = function(Args1, Args2)
-	if AntiRagdoll then
+    if AntiRagdoll then
         return true
     else
         return Old(Args1, Args2)
-	end
+    end
+end
+
+local New = Client.Falling.StartRagdolling
+Client.Falling.StartRagdolling = function(...)
+    if AntiRagdoll then
+        return
+    else
+        return New(...)
+    end
 end
 
 local S = Client.InventoryItemSystem.playerHasItem
 Client.InventoryItemSystem.playerHasItem = function(Player, Key)
-	if Player == game:GetService("Players").LocalPlayer and Key == "Key" and AlwayKey then
-		return true
-	else
-		return S(Player, Key)
-	end
+    if Player == game:GetService("Players").LocalPlayer and Key == "Key" and AlwayKey then
+        return true
+    else
+        return S(Player, Key)
+    end
 end
 
 Client.KillMasionNPCs = function()
@@ -207,25 +226,25 @@ Client.KillMasionNPCs = function()
     end
 end
 Client.OilKillNPC = function()
-	local Oil = Workspace:FindFirstChild("OilRig")
-	if Oil then
-		if Oil:FindFirstChild("GuardsFolder") then
-			for i,v in next, Oil.GuardsFolder:GetChildren() do
-				if v:FindFirstChild("Humanoid") then
-					if isnetworkowner(v.HumanoidRootPart) then
-						v:FindFirstChildWhichIsA("Humanoid").Health = 0
-					end
-				end
-			end
-		end
-	end
+    local Oil = Workspace:FindFirstChild("OilRig")
+    if Oil then
+        if Oil:FindFirstChild("GuardsFolder") then
+            for i,v in next, Oil.GuardsFolder:GetChildren() do
+                if v:FindFirstChild("Humanoid") then
+                    if isnetworkowner(v.HumanoidRootPart) then
+                        v:FindFirstChildWhichIsA("Humanoid").Health = 0
+                    end
+                end
+            end
+        end
+    end
 end
 
 Client.KillDropNPC = function()
     for i,v in next, Workspace:GetChildren() do
         if v.Name == "Drop" then
-           local NPCs = v:FindFirstChild("NPCs")
-           if NPCs then
+            local NPCs = v:FindFirstChild("NPCs")
+            if NPCs then
                 for i,v in next, NPCs:GetChildren() do
                     if v:FindFirstChildWhichIsA("Humanoid") then
                         if isnetworkowner(v.HumanoidRootPart) then
@@ -239,16 +258,16 @@ Client.KillDropNPC = function()
 end
 
 local CheckTeam = function()
-	local Team = tostring(Player.Team)
- 	if Team then
-		if Team == "Criminal" then
-			return "Police"
-		elseif Team == "Police" then
-			return "Criminal"
-		elseif Team == "Prisoner" then
-			return "Police"
-		end
-	end
+    local Team = tostring(Player.Team)
+    if Team then
+        if Team == "Criminal" then
+            return "Police"
+        elseif Team == "Police" then
+            return "Criminal"
+        elseif Team == "Prisoner" then
+            return "Police"
+        end
+    end
 end
 
 local Sethiddenproperty = function(A, B, C)
@@ -257,138 +276,596 @@ local Sethiddenproperty = function(A, B, C)
     setthreadcontext(8)
 end
 
-
 local GetClosestTargetOnOtherTeam = function()
     local ClosestPlayer = nil
     local ClosestDistance = math.huge
     for _, V in next, Players:GetPlayers() do
         if V ~= Player then
-			if tostring(V.Team) == CheckTeam() then
-				if V.Character and V.Character:FindFirstChild("HumanoidRootPart") and V.Character.Humanoid.Health ~= 0 and not table.find(WhiteListed, V.Name) and Player.Character.Humanoid.Health ~= 0 then
-					local Distance = (Player.Character.HumanoidRootPart.Position - V.Character.HumanoidRootPart.Position).magnitude
-					if Distance < ClosestDistance and Distance <= 600 then
-						ClosestDistance = Distance
-						ClosestPlayer = V
-					end
-				end
-			end
-		end
+            if tostring(V.Team) == CheckTeam() then
+                if V.Character and V.Character:FindFirstChild("HumanoidRootPart") and V.Character.Humanoid.Health ~= 0 and not table.find(WhiteListed, V.Name) and Player.Character.Humanoid.Health ~= 0 then
+                    local Distance = (Player.Character.HumanoidRootPart.Position - V.Character.HumanoidRootPart.Position).magnitude
+                    if Distance < ClosestDistance and Distance <= 600 then
+                        ClosestDistance = Distance
+                        ClosestPlayer = V
+                    end
+                end
+            end
+        end
     end
     if ClosestPlayer then return ClosestPlayer end
 end
+
 Client.Yes = function(v)
-	if v:IsA("TouchTransmitter") then
-		if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
-			if v.Parent:IsA("BasePart") then
-				Sethiddenproperty(v.Parent, "CanTouch", false)
-			end
-		end
-	end
+    if v:IsA("TouchTransmitter") then
+        if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
+            if v.Parent:IsA("BasePart") then
+                Sethiddenproperty(v.Parent, "CanTouch", false)
+            end
+        end
+    end
 end
 
 local Ray = require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
-require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList = function(...)        
-    local Args = {OldScript(...)}
+require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList = function(...)
+    local Args = {Ray(...)}
     local C = GetClosestTargetOnOtherTeam()
     if tostring(getfenv(2).script) == "BulletEmitter" and C and C.Character then
-		if Toggle or Kill then
-			Args[1] = C.Character.HumanoidRootPart
-			Args[2] = C.Character.HumanoidRootPart.Position
-			Args[3] = C.Character.HumanoidRootPart.Position
-			return unpack(Args)
-		end
+        if Toggle or Kill then
+            Args[1] = C.Character.HumanoidRootPart
+            Args[2] = C.Character.HumanoidRootPart.Position
+            Args[3] = C.Character.HumanoidRootPart.Position
+            return unpack(Args)
+        end
     end
     return Ray(...)
 end
 
 Client.GetAllGuns = function()
-	setthreadcontext(2)
-	if not Client.GunShopUI.isOpen() then
-		Client.GunShopUI.open()
-	end
-	if Client.GunShopUI.gui then
-		local Slider = Client.GunShopUI.gui.Container.Container.Main.Container:FindFirstChild("Slider")
-		if Slider then
-			for i,v in next, Slider:GetChildren() do
-				if v:FindFirstChild("Action", true) and v:FindFirstChild("Action", true).Text == "EQUIP" then
-					for i,v in next, getconnections(v:FindFirstChild("Action", true).MouseButton1Down) do
-						v.Function()
-					end
-				end
-			end
-		end
-	end
-	if Client.GunShopUI.isOpen() then
-		Client.GunShopUI.close()
-	end
-	setthreadcontext(8)
+    setthreadcontext(2)
+    if not Client.GunShopUI.isOpen() then
+        Client.GunShopUI.open()
+    end
+    if Client.GunShopUI.gui then
+        local Slider = Client.GunShopUI.gui.Container.Container.Main.Container:FindFirstChild("Slider")
+        if Slider then
+            for i,v in next, Slider:GetChildren() do
+                if v:FindFirstChild("Action", true) and v:FindFirstChild("Action", true).Text == "EQUIP" then
+                    for i,v in next, getconnections(v:FindFirstChild("Action", true).MouseButton1Down) do
+                        v.Function()
+                    end
+                end
+            end
+        end
+    end
+    if Client.GunShopUI.isOpen() then
+        Client.GunShopUI.close()
+    end
+    setthreadcontext(8)
 end
-
 
 Client.Shoot = function()
     local Gun2 = Gun or "Pistol"
-	local Equip = Client.ItemSystem.GetLocalEquipped()
-	if Equip and GetClosestTargetOnOtherTeam() then
-		Client.Gun._attemptShoot(Equip, {})
-	end
-	if Player.Folder:FindFirstChild(Gun2) and GetClosestTargetOnOtherTeam() then
-		Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
-	elseif Equip and not GetClosestTargetOnOtherTeam() then
-		Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
-	elseif not Player.Folder:FindFirstChild(Gun2) then
-		Client.GetAllGuns()
-	end
+    local Equip = Client.ItemSystem.GetLocalEquipped()
+    if Equip and GetClosestTargetOnOtherTeam() then
+		if Equip.Model then
+        	Client.Gun._attemptShoot(Equip)
+		end
+    end
+    if Player.Folder:FindFirstChild(Gun2) and GetClosestTargetOnOtherTeam() then
+        Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
+    elseif Equip and not GetClosestTargetOnOtherTeam() then
+        Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
+    elseif not Player.Folder:FindFirstChild(Gun2) then
+        Client.GetAllGuns()
+    end
 end
-
-
-Client.AirDropCollect = function()
-end
-
 
 Client.KeyPress = function(Key)
-	for i,v in next, Client.ActionButtonService.active do
-		if type(v) == "table" and v.keyCodes then
-			if table.find(v.keyCodes, Key) then
-				v.onPressed(true)
-			end
-		end
-	end
+    for i,v in next, Client.ActionButtonService.active do
+        if type(v) == "table" and v.keyCodes then
+            if table.find(v.keyCodes, Key) then
+                v.onPressed(true)
+            end
+        end
+    end
 end
 
-spawn(function()
-	while wait(.2) do
-		local A, B = pcall(function()
-            if Player.Character:FindFirstChild("Humanoid") then
-                Player.Character.Humanoid.WalkSpeed = (DWalkSpeed and tonumber(Client.WalkSpeed)) or 25
-                Player.Character.Humanoid.JumpPower = (DJumpPower and tonumber(Client.JumpPower)) or 50
+for i,v in next, game:GetDescendants() do
+    Client.Yes(v)
+end
+game.DescendantAdded:Connect(function(v)
+    Client.Yes(v)
+end)
+
+Client.NotificationSystem("CodeNest")
+local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
+local UI = Atlas.new({
+    Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    ConfigFolder = "Jailbreak";
+    Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
+    Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
+    Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
+    -- Atlas Loader:
+    UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
+    FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
+    CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
+        return true
+    end;
+    Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
+})
+
+local Basic = UI:CreatePage("Basic Features")
+local Misc = Basic:CreateSection("Automatics")
+local Aim = Basic:CreateSection("Aim")
+local Misc2 = Basic:CreateSection("Anti")
+
+local Veh = UI:CreatePage("Vehicle Features")
+local V = Veh:CreateSection("Cars")
+local Heli = Veh:CreateSection("Helis")
+
+local s = UI:CreatePage("Robbery Status")
+local Robberys1 = s:CreateSection("Robberys")
+
+local hello = UI:CreatePage("Destroy UI")
+local Nig = hello:CreateSection("Destroy")
+
+Aim:CreateToggle({
+    Name = "Silent Aim";
+    Flag = "Asfjksdfhjersdhkfjh";
+    Default = false;
+    Callback = function(Value)
+        Toggle = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Aim:CreateToggle({
+    Name = "Kill Aura";
+    Flag = "Asfjksdf435hjersgrgettrtrdhkfjh";
+    Default = false;
+    Callback = function(Value)
+        Kill = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+local Hello = Aim:CreateDropdown({
+    Name = "Kill Aura Gun"; -- required: name of element
+    Callback = function(v)
+        Gun = v
+    end;
+    Options = Guns;
+    ItemSelecting = true;
+    DefaultItemSelected = "";
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+})
+
+local PlayerTable = Aim:CreateDropdown({
+    Name = "Add Player To Killaura whitelist"; -- required: name of element
+    Callback = function(v)
+        table.insert(WhiteListed, v)
+    end;
+    Options = PlayersTable;
+    ItemSelecting = true;
+    DefaultItemSelected = "";
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+})
+
+local PlayerTable2 = Aim:CreateDropdown({
+    Name = "Remove Player To Killaura whitelist"; -- required: name of element
+    Callback = function(v)
+        table.remove(WhiteListed, tonumber(v))
+    end;
+    Options = WhiteListed;
+    ItemSelecting = true;
+    DefaultItemSelected = "";
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+})
+
+Misc2:CreateToggle({
+    Name = "Anti Oil NPC";
+    Flag = "Asfjksdfhjsdhkfjh";
+    Default = false;
+    Callback = function(Value)
+        KillBoys = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({
+    Name = "Anti Mansion NPC";
+    Flag = "Asfjksdfhjsdhkdddfjh";
+    Default = false;
+    Callback = function(Value)
+        DDD = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({
+    Name = "Anti Taze";
+    Flag = "A";
+    Default = false;
+    Callback = function(Value)
+        NoTazeStun = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({
+    Name = "Anti Ragdoll";
+    Flag = "b";
+    Default = false;
+    Callback = function(Value)
+        AntiRagdoll = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({
+    Name = "Anti Drop NPCS";
+    Flag = "Asf34345jkssdfhjersdhkfjh";
+    Default = false;
+    Callback = function(Value)
+        DropNPCS = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({
+    Name = "Anti Punch Guilty (No Punch Arrest)";
+    Flag = "Asf34shdgadhhsahd3sdjkfhsjkdfhjkdsfsd45jksdfhjer4234sdhkfjh";
+    Default = false;
+    Callback = function(Value)
+        NoPunch = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({
+    Name = "Auto Escape";
+    Flag = "Asf34shdgadhhsahd345jksdfhjer4234sdhkfjh";
+    Default = false;
+    Callback = function(Value)
+        Autoespcaue = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({
+    Name = "Auto Open All Doors (Small Lag)";
+    Flag = "b2342342342344";
+    Default = false;
+    Callback = function(Value)
+        OpenAllDoorsdoor = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({
+    Name = "Spam Valcano";
+    Flag = "d";
+    Default = false;
+    Callback = function(Value)
+        LavaFun2 = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({
+    Name = "Always have key";
+    Flag = "c";
+    Default = false;
+    Callback = function(Value)
+        AlwayKey = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc:CreateSliderToggle({
+    Name = "FlyHax";
+    SliderFlag = "Slider";
+    ToggleFlag = "Toggle";
+    Min = 1;
+    Max = 120;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        SpeedT = newValue
+    end;
+    ToggleCallback = function(newValue)
+        Client.Main.Fly(newValue, SpeedT)
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc:CreateSliderToggle({
+    Name = "WalkSpeed";
+    SliderFlag = "WalKSpeed";
+    ToggleFlag = "Toggdle";
+    Min = 1;
+    Max = 120;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        Client.WalkSpeed = newValue
+    end;
+    ToggleCallback = function(newValue)
+        DWalkSpeed = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc:CreateSliderToggle({
+    Name = "JumpPower";
+    SliderFlag = "JumpPower";
+    ToggleFlag = "Togdglse";
+    Min = 1;
+    Max = 250;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        Client.JumpPower = newValue
+    end;
+    ToggleCallback = function(newValue)
+        DJumpPower = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+V:CreateToggle({
+    Name = "Anti PopTire";
+    Flag = "sdhkfgjhsdgfsdfh2s384783247";
+    Default = false;
+    Callback = function(Value)
+        NoPop = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Heli:CreateSliderToggle({
+    Name = "Heli Speed";
+    SliderFlag = "dfdsfsdfshjvghjyuvgfhjghjgjhghgdsfdsfdsdfer";
+    ToggleFlag = "dfgdfdgdghdsjfgjksdfh";
+    Min = 1;
+    Max = 10;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 1;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        HeliSpeed = newValue
+    end;
+    ToggleCallback = function(newValue)
+        FastHei = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Heli:CreateToggle({
+    Name = "Heli Infinite Height";
+    Flag = "sdhkfgjhsdgdfsdfh3384783247";
+    Default = false;
+    Callback = function(Value)
+        MaxHeight2 = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+V:CreateSliderToggle({
+    Name = "TurnSpeed";
+    SliderFlag = "dfsfsdfsdsfdsfdsdfer";
+    ToggleFlag = "dfghdsjfgjksdfh";
+    Min = 1;
+    Max = 5;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        TurnSpeedV = newValue
+    end;
+    ToggleCallback = function(newValue)
+        TurnSpeed = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+V:CreateSliderToggle({
+    Name = "Height";
+    SliderFlag = "dfssdfsdfsdsfdsfdssdfer";
+    ToggleFlag = "dfghdsssjfgjksdfh";
+    Min = 1;
+    Max = 30;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        HeightV = newValue
+    end;
+    ToggleCallback = function(newValue)
+        Height = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+V:CreateSliderToggle({
+    Name = "GarageBrakes";
+    SliderFlag = "dfssdfsdssfsdsfdsfdssdfer";
+    ToggleFlag = "dfghdssssssjfgjksdfh";
+    Min = 1;
+    Max = 30;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        GarageBrakesV = newValue
+    end;
+    ToggleCallback = function(newValue)
+        GarageBrakes = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+V:CreateSliderToggle({
+    Name = "GarageEngineSpeed";
+    SliderFlag = "dfssdfsdssfsdsfdsfdsfsdfer";
+    ToggleFlag = "dfghdssfssssjfgjksdfh";
+    Min = 1;
+    Max = 30;
+    AllowOutOfRange = false;
+    Digits = 2;
+    SliderDefault = 5;
+    ToggleDefault = false;
+    SliderCallback = function(newValue)
+        GarageEngineSpeedV = newValue
+    end;
+    ToggleCallback = function(newValue)
+        GarageEngineSpeed = newValue
+    end;
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+V:CreateToggle({
+    Name = "Auto Flip Car";
+    Flag = "sdhkfgjhsdgfsdfh2384783247";
+    Default = false;
+    Callback = function(Value)
+        AlwayCarFlip = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+V:CreateToggle({
+    Name = "Spam Car Lights";
+    Flag = "sdhkfgjhsdgfsdfh3384783247";
+    Default = false;
+    Callback = function(Value)
+        Lights = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Nig:CreateButton({
+	Name = "Destroy?"; -- required: name of element
+	Callback = function()  -- required: function to be called when button is pressed
+		UI:Destroy()
+	end
+})
+---- Loops
+RunService.Stepped:Connect(function()
+    local A, B = pcall(function()
+        if Player.Character:FindFirstChild("Humanoid") then
+            local Humanoid = Player.Character:FindFirstChildWhichIsA("Humanoid")
+            if Client.EditCar() and Client.EditCar().Type == "Heli" and FastHei then
+                if Client.EditCar().Velocity then
+                    Client.EditCar().Velocity.Velocity = Client.EditCar().Velocity.Velocity * HeliSpeed
+                end
             end
+        end
+        if Player.Character:FindFirstChild("Humanoid") then
+            Player.Character.Humanoid.WalkSpeed = (DWalkSpeed and tonumber(Client.WalkSpeed)) or 25
+            Player.Character.Humanoid.JumpPower = (DJumpPower and tonumber(Client.JumpPower)) or 50
+        end
+        if tick() - MasterTicks.NPCSTick >= 1 then
             if DDD then
                 Client.KillMasionNPCs()
             end
-			if KillBoys then
-				Client.OilKillNPC()
-			end
+            if KillBoys then
+                Client.OilKillNPC()
+            end
             if DropNPCS then
                 Client.KillDropNPC()
             end
-			if Kill then
-				Client.Shoot()
-			end
-			if AlwayCarFlip then
-				Client.KeyPress(Enum.KeyCode.V)
-			end
-			if Lights then
-				Client.KeyPress(Enum.KeyCode.L)
-			end
-			if PunchGuilty and Client.Settings.Time.PunchGuilty ~= 0 then
-				rawset(Client.Settings.Time, "PunchGuilty", 0)
-			end
-			if NoTazeStun and Client.Settings.Time.Stunned ~= 0 then
-				rawset(Client.Settings.Time, "Stunned", 0)
-			end
-			if LavaFun2 and Workspace:FindFirstChild("LavaFun") and Workspace.LavaFun:FindFirstChild("Lavatouch") then
-				firetouchinterest(Player.Character.HumanoidRootPart, Workspace.LavaFun.Lavatouch, 0)
-			end
+            MasterTicks.NPCSTick = tick()
+        end
+        if tick() - MasterTicks.KillTick >= 0.5 then
+            if Kill then
+                Client.Shoot()
+            end
+            MasterTicks.KillTick = tick()
+        end
+        if tick() - MasterTicks.PressTick >= 0.5 then
+            if AlwayCarFlip then
+                Client.KeyPress(Enum.KeyCode.V)
+            end
+            if Lights then
+                Client.KeyPress(Enum.KeyCode.L)
+            end
+            MasterTicks.PressTick = tick()
+        end
+        if tick() - MasterTicks.RawSetTick >= 1 then
+            if PunchGuilty and Client.Settings.Time.PunchGuilty ~= 0 then
+                rawset(Client.Settings.Time, "PunchGuilty", 0)
+            end
+            if NoTazeStun and Client.Settings.Time.Stunned ~= 0 then
+                rawset(Client.Settings.Time, "Stunned", 0)
+            end
+            if LavaFun2 and Workspace:FindFirstChild("LavaFun") and Workspace.LavaFun:FindFirstChild("Lavatouch") then
+                firetouchinterest(Player.Character.HumanoidRootPart, Workspace.LavaFun.Lavatouch, 0)
+            end
+            MasterTicks.RawSetTick = tick()
+        end
+        if tick() - MasterTicks.CarTick >= 0.9 then
             if Client.EditCar() then
                 if TurnSpeed and Client.EditCar().TurnSpeed ~= TurnSpeedV then
                     Client.EditCar("TurnSpeed", TurnSpeedV)
@@ -415,391 +892,30 @@ spawn(function()
                         Client.EditCar("TirePopProportion", 0)
                     end
                 end
-            end       
-		end)
-        if not A then
-            print(B)
-        end
-	end
-end)
-
-RunService.Stepped:Connect(function()
-    local A, B = pcall(function()
-        if Player.Character:FindFirstChild("Humanoid") then
-            local Humanoid = Player.Character:FindFirstChildWhichIsA("Humanoid")
-            if Client.EditCar() and Client.EditCar().Type == "Heli" and FastHei then
-                if Client.EditCar().Velocity then
-                    Client.EditCar().Velocity.Velocity = Client.EditCar().Velocity.Velocity * HeliSpeed
-                end
+                MasterTicks.CarTick = tick()
             end
         end
+		if tick() - MasterTicks.Wait5 >= 5 then
+			if Autoespcaue then
+                Client.AutoEscape()
+            end
+            if OpenAllDoorsdoor then
+                Client.OpenAllDoors()
+            end
+            if CollectAirDropsForMe then
+                Client.AirDropCollect()
+            end
+			for _,v in next, Players:GetPlayers() do
+				if v ~= Player and not table.find(PlayersTable, v.Name) then
+					table.insert(PlayersTable, v.Name)
+				end
+			end
+			PlayerTable:Update(PlayersTable)
+			PlayerTable2:Update(WhiteListed)
+            MasterTicks.Wait5 = tick()
+		end
     end)
     if not A then
         print(B)
     end
 end)
-
-for i,v in next, game:GetDescendants() do
-	Client.Yes(v)
-end
-game.DescendantAdded:Connect(function(v)
-	Client.Yes(v)
-end)
-
-Client.NotificationSystem("CodeNest")
-
-local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
-local UI = Atlas.new({
-    Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
-    ConfigFolder = "Jailbreak";
-    Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
-    Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
-    Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
-    -- Atlas Loader:
-    UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
-    FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
-    CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
-        return true
-    end;
-    Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
-})
-local Basic = UI:CreatePage("Basic Features")
-local Misc = Basic:CreateSection("Automatics")
-local Aim = Basic:CreateSection("Aim")
-local Misc2 = Basic:CreateSection("Anti")
-
-
-local Veh = UI:CreatePage("Vehicle Features")
-local V = Veh:CreateSection("Cars")
-local Heli = Veh:CreateSection("Helis")
-
-local s = UI:CreatePage("Robbery Status")
-local Robberys1 = s:CreateSection("Robberys")
-
-local hello = UI:CreatePage("Destroy UI")
-local Nig = hello:CreateSection("Destroy")
-
-for i,v in next, ReplicatedStorage.RobberyState:GetChildren() do
-	local Names = Client.RobberyConsts.PRETTY_NAME[tonumber(v.Name)]
-	Labels[Names] = Robberys1:CreateParagraph(Names) -- creates a paragraph element with "Hello world!" as the text content
-end
-Update = function()
-	for i,v in next, ReplicatedStorage.RobberyState:GetChildren() do
-		local Names = Client.RobberyConsts.PRETTY_NAME[tonumber(v.Name)]
-		if v.Value == Client.RobberyConsts.ENUM_STATUS.CLOSED and Labels[Names].obj ~= Names.." Closed" then
-			Labels[Names].Set(Names.." Closed")
-		elseif v.Value == Client.RobberyConsts.ENUM_STATUS.OPENED and Labels[Names].obj ~= Names.." Is Opened" then
-			Labels[Names].Set(Names.." Is Opened")
-		elseif Labels[Names].obj ~= Names.." is In Robbery" then
-			Labels[Names].Set(Names.." is In Robbery")
-		end
-	end
-end
-
-spawn(function()
-	while wait(5) do
-		pcall(function()
-			if Autoespcaue then
-				Client.AutoEscape()
-			end
-			if OpenAllDoorsdoor then
-				Client.OpenAllDoors()
-			end
-			if CollectAirDropsForMe then
-				Client.AirDropCollect()
-			end
-			Update()
-		end)
-	end
-end)
-
-Aim:CreateToggle({Name = "Silent Aim"; Flag = "Asfjksdfhjersdhkfjh"; Default = false;
-	Callback = function(Value)
-		Toggle = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Aim:CreateToggle({Name = "Kill Aura"; Flag = "Asfjksdf435hjersgrgettrtrdhkfjh"; Default = false;
-	Callback = function(Value)
-		Kill = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-
-local Hello = Aim:CreateDropdown({ 
-	Name = "Kill Aura Gun"; -- required: name of element
-	Callback = function(v) 
-		Gun = v 
-	end;
-	Options = Guns;
-	ItemSelecting = true; 
-	DefaultItemSelected = "";
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-})
-
-local PlayerTable = Aim:CreateDropdown({ 
-	Name = "Add Player To Killaura whitelist"; -- required: name of element
-	Callback = function(v) 
-		table.insert(WhiteListed, v) 
-	end;
-	Options = PlayersTable;
-	ItemSelecting = true; 
-	DefaultItemSelected = "";
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-})
-local PlayerTable2 = Aim:CreateDropdown({ 
-	Name = "Remove Player To Killaura whitelist"; -- required: name of element
-	Callback = function(v) 
-		table.remove(WhiteListed, tonumber(v))
-	end;
-	Options = WhiteListed;
-	ItemSelecting = true; 
-	DefaultItemSelected = "";
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-})
-spawn(function()
-	while wait() do  
-		for _,v in next, Players:GetPlayers() do
-			if v ~= Player and not table.find(PlayersTable, v.Name) then
-				table.insert(PlayersTable, v.Name)
-			end
-		end
-		PlayerTable:Update(PlayersTable)
-		PlayerTable2:Update(WhiteListed)
-		wait()
-	end
-end)
-
-Misc2:CreateToggle({Name = "Anti Oil NPC"; Flag = "Asfjksdfhjsdhkfjh"; Default = false;
-	Callback = function(Value)
-		KillBoys = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-Misc2:CreateToggle({Name = "Anti Mansion NPC"; Flag = "Asfjksdfhjsdhkdddfjh"; Default = false;
-	Callback = function(Value)
-		DDD = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-Misc2:CreateToggle({Name = "Anti Taze"; Flag = "A"; Default = false;
-	Callback = function(Value)
-		NoTazeStun = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Misc2:CreateToggle({Name = "Anti Ragdoll"; Flag = "b";  Default = false;
-	Callback = function(Value)
-		AntiRagdoll = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-Misc2:CreateToggle({Name = "Anti Drop NPCS"; Flag = "Asf34345jkssdfhjersdhkfjh"; Default = false;
-	Callback = function(Value)
-		DropNPCS = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Misc2:CreateToggle({Name = "Anti Punch Guilty (No Punch Arrest)"; Flag = "Asf34shdgadhhsahd3sdjkfhsjkdfhjkdsfsd45jksdfhjer4234sdhkfjh"; Default = false;
-	Callback = function(Value)
-		NoPunch = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Misc:CreateToggle({Name = "Auto Escape"; Flag = "Asf34shdgadhhsahd345jksdfhjer4234sdhkfjh"; Default = false;
-	Callback = function(Value)
-		Autoespcaue = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-Misc:CreateToggle({Name = "Auto Open All Doors (Small Lag)"; Flag = "b2342342342344";  Default = false;
-	Callback = function(Value)
-		OpenAllDoorsdoor = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Misc:CreateToggle({Name = "Spam Valcano"; Flag = "d";  Default = false;
-	Callback = function(Value)
-		LavaFun2 = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Misc:CreateToggle({Name = "Always have key"; Flag = "c";  Default = false;
-	Callback = function(Value)
-		AlwayKey = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Misc:CreateSliderToggle({Name = "FlyHax"; SliderFlag = "Slider"; ToggleFlag = "Toggle";Min = 1;Max = 120;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-	    SpeedT = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		Client.Main.Fly(newValue, SpeedT)
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-Misc:CreateSliderToggle({Name = "WalkSpeed"; SliderFlag = "WalKSpeed"; ToggleFlag = "Toggdle";Min = 1;Max = 120;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-	    Client.WalkSpeed = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		DWalkSpeed = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-Misc:CreateSliderToggle({Name = "JumpPower"; SliderFlag = "JumpPower"; ToggleFlag = "Togdglse";Min = 1;Max = 250;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-	    Client.JumpPower = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		DJumpPower = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-V:CreateToggle({Name = "Anti PopTire"; Flag = "sdhkfgjhsdgfsdfh2s384783247";  Default = false;
-	Callback = function(Value)
-		NoPop = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-Heli:CreateSliderToggle({Name = "Heli Speed"; SliderFlag = "dfdsfsdfshjvghjyuvgfhjghjgjhghgdsfdsfdsdfer"; ToggleFlag = "dfgdfdgdghdsjfgjksdfh";Min = 1;Max = 10;AllowOutOfRange = false;Digits = 2;SliderDefault = 1;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		HeliSpeed = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		FastHei = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-Heli:CreateToggle({Name = "Heli Infinite Height"; Flag = "sdhkfgjhsdgdfsdfh3384783247";  Default = false;
-	Callback = function(Value)
-		 MaxHeight2 = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-V:CreateSliderToggle({Name = "TurnSpeed"; SliderFlag = "dfsfsdfsdsfdsfdsdfer"; ToggleFlag = "dfghdsjfgjksdfh";Min = 1;Max = 5;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		TurnSpeedV = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		TurnSpeed = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-V:CreateSliderToggle({Name = "Height"; SliderFlag = "dfssdfsdfsdsfdsfdssdfer"; ToggleFlag = "dfghdsssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		HeightV = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		Height = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-V:CreateSliderToggle({Name = "GarageBrakes"; SliderFlag = "dfssdfsdssfsdsfdsfdssdfer"; ToggleFlag = "dfghdssssssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		GarageBrakesV = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		GarageBrakes = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-
-V:CreateSliderToggle({Name = "GarageEngineSpeed"; SliderFlag = "dfssdfsdssfsdsfdsfdsfsdfer"; ToggleFlag = "dfghdssfssssjfgjksdfh";Min = 1;Max = 30;AllowOutOfRange = false;Digits = 2;SliderDefault = 5;ToggleDefault = false;
-	SliderCallback = function(newValue)
-		GarageEngineSpeedV = newValue
-	end;
-	ToggleCallback = function(newValue) 
-		GarageEngineSpeed = newValue
-	end;
-	Warning = "This has a warning";
-	WarningIcon = 12345;
-	CallbackOnCreation = true;
-})
-V:CreateToggle({Name = "Auto Flip Car"; Flag = "sdhkfgjhsdgfsdfh2384783247";  Default = false;
-	Callback = function(Value)
-		AlwayCarFlip = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-V:CreateToggle({Name = "Spam Car Lights"; Flag = "sdhkfgjhsdgfsdfh3384783247";  Default = false;
-	Callback = function(Value)
-		Lights = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
-    CallbackOnCreation = true;
-})
-
-
-Nig:CreateButton({
-	Name = "Destroy?"; -- required: name of element
-	Callback = function()  -- required: function to be called when button is pressed
-		UI:Destroy()
-	end
-})
