@@ -39,7 +39,7 @@ for i,v in next, getgc(true) do
     end
     if type(v) == "function" and islclosure(v) then
         local Script = getfenv(v).script
-        local Name = debug.getinfo(v, "n")
+        local Name = debug.info(v, "n")
         if Name == "requestRelics" then
             Client.requestRelics = v
         elseif Name == "relicClicked" then
