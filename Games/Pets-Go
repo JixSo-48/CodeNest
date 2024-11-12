@@ -22,11 +22,18 @@ local Client = {
 }
 local BlackListed = {}
 local Coins = {}
+local Ticks = {
+    Tick1 = tick(),
+    Tick5 = tick(),
+    NoTick = tick(),
+}
+
 for i,v in next, Client.Break:GetChildren() do
     if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
         table.insert(Coins, tostring(v:GetAttributes().BreakableID))
     end
 end
+
 for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
     Client[v.Name] = require(v)
 end
