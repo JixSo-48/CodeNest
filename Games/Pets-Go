@@ -629,7 +629,7 @@ Nig:CreateButton({
 
 RunService.RenderStepped:Connect(function()
     local A, B = pcall(function()
-        if tick() - Ticks.Tick1 >= 0.1 then
+        if tick() - Ticks.Tick1 >= 0.5 then
             Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
             if Roll2 then
                 Client.InvokeServer("Bonus Rolls: Claim", {})
@@ -658,6 +658,7 @@ RunService.RenderStepped:Connect(function()
             if Relics then
                 Client.CollectRelics()
             end
+            Ticks.Tick1 = tick()
         end
         if tick() - Ticks.NoTick >= 0 then
             if Collect then
@@ -675,6 +676,7 @@ RunService.RenderStepped:Connect(function()
             if Bloons then
                 Client.Bloons()
             end
+            Ticks.NoTick = tick()
         end
         if tick() - Ticks.Tick5  >= 5 then
             if Upgrade then
@@ -696,6 +698,7 @@ RunService.RenderStepped:Connect(function()
             end
             Item:Update(Coins)
             Item2:Update(BlackListed)
+            Ticks.Tick5 = tick()
         end
     end)
     if not A then
