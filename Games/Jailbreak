@@ -361,19 +361,15 @@ Client.Shoot = function()
     local Equip = Client.ItemSystem.GetLocalEquipped()
     if Equip then
         if Equip.Model then
-            if GetClosestTargetOnOtherTeam() or Client.GetBoss() then
+            if GetClosestTargetOnOtherTeam() then
                 Client.Gun._attemptShoot(Equip)
             end
         end
     end
-    if Player.Folder:FindFirstChild(Gun2) then
-        if Client.GetBoss() or GetClosestTargetOnOtherTeam() then
-            Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
-        end
-    elseif Equip then
-        if not Client.GetBoss() or not GetClosestTargetOnOtherTeam() then
-            Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
-        end
+    if Player.Folder:FindFirstChild(Gun2) and GetClosestTargetOnOtherTeam() then
+        Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
+    elseif Equip and not GetClosestTargetOnOtherTeam() then
+        Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
     elseif not Player.Folder:FindFirstChild(Gun2) then
         Client.GetAllGuns()
     end
