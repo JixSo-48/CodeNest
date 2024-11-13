@@ -37,7 +37,6 @@ local Client = {
     JumpPower = 50,
     TaskTick = tick()
 }
-Client.ItemSystem.GetLocalEquipped()
 Client.NotificationSystem = function(text)
     Client.Notification.new(
         {
@@ -143,12 +142,51 @@ OldNameCall = hookmetamethod(game, "__index", function(A, B, ...)
     return OldNameCall(A, B, ...)
 end)
 
-Client.EditCar = function(Value, Number)
-    local packet = Client.GetLocalVehiclePacket(Player)
-    if packet and Value and Number then
-        packet[Value] = Number
+local GetBoss = function()
+    local Boss = Workspace.MansionRobbery:FindFirstChild("ActiveBoss")
+    if Boss then
+        if Client.Main.Mag(Player.Character.Humanoid.RootPart, Boss.Head) < 100 then
+            return Boss
+        end
     end
-    return packet
+end
+local GetClosestTargetOnOtherTeam = function()
+    local ClosestPlayer = nil
+    local ClosestDistance = math.huge
+    for _, V in next, Players:GetPlayers() do
+        if V ~= Player then
+            if tostring(V.Team) == CheckTeam() then
+                if V.Character and V.Character:FindFirstChild("HumanoidRootPart") and V.Character.Humanoid.Health ~= 0 and not table.find(WhiteListed, V.Name) and Player.Character.Humanoid.Health ~= 0 then
+                    local Distance = (Player.Character.HumanoidRootPart.Position - V.Character.HumanoidRootPart.Position).magnitude
+                    if Distance < ClosestDistance and Distance <= 600 then
+                        ClosestDistance = Distance
+                        ClosestPlayer = V
+                    end
+                end
+            end
+        end
+    end
+    if ClosestPlayer then return ClosestPlayer end
+end
+
+local Ray = require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
+require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList = function(...)
+    local Args = {Ray(...)}
+    local Boss = GetBoss()
+    local C = GetClosestTargetOnOtherTeam()
+    if Toggle or Kill then
+        if tostring(getfenv(2).script) == "BulletEmitter" and C and C.Character then
+            Args[1] = C.Character.Head
+            Args[2] = C.Character.Head.Position
+            Args[3] = C.Character.Head.Position
+            return unpack(Args)
+        elseif Boss and tostring(getfenv(2).script) == "BulletEmitter" then
+            Args[1] = Boss.Head
+            Args[2] = Boss.Head.Position
+            return unpack(Args)
+        end
+    end
+    return Ray(...)
 end
 
 Client.Teleport = function(CFrame)
@@ -188,33 +226,6 @@ Client.EditCar = function(Value, Number)
         packet[Value] = Number
     end
     return packet
-end
-
-local Old = Client.TagUtils.isPointInTag
-Client.TagUtils.isPointInTag = function(Args1, Args2)
-    if AntiRagdoll then
-        return true
-    else
-        return Old(Args1, Args2)
-    end
-end
-
-local New = Client.Falling.StartRagdolling
-Client.Falling.StartRagdolling = function(...)
-    if AntiRagdoll then
-        return
-    else
-        return New(...)
-    end
-end
-
-local S = Client.InventoryItemSystem.playerHasItem
-Client.InventoryItemSystem.playerHasItem = function(Player, Key)
-    if Player == game:GetService("Players").LocalPlayer and Key == "Key" and AlwayKey then
-        return true
-    else
-        return S(Player, Key)
-    end
 end
 
 Client.KillMasionNPCs = function()
@@ -277,61 +288,43 @@ local Sethiddenproperty = function(A, B, C)
     setthreadcontext(8)
 end
 
-local GetClosestTargetOnOtherTeam = function()
-    local ClosestPlayer = nil
-    local ClosestDistance = math.huge
-    for _, V in next, Players:GetPlayers() do
-        if V ~= Player then
-            if tostring(V.Team) == CheckTeam() then
-                if V.Character and V.Character:FindFirstChild("HumanoidRootPart") and V.Character.Humanoid.Health ~= 0 and not table.find(WhiteListed, V.Name) and Player.Character.Humanoid.Health ~= 0 then
-                    local Distance = (Player.Character.HumanoidRootPart.Position - V.Character.HumanoidRootPart.Position).magnitude
-                    if Distance < ClosestDistance and Distance <= 600 then
-                        ClosestDistance = Distance
-                        ClosestPlayer = V
-                    end
-                end
-            end
-        end
-    end
-    if ClosestPlayer then return ClosestPlayer end
-end
-
 Client.Yes = function(v)
     if v:IsA("TouchTransmitter") then
         if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
-            if v.Parent:IsA("BasePart") then
+            if v.Parent:IsA("BasePart") and v.Parent.CanTouch then
                 Sethiddenproperty(v.Parent, "CanTouch", false)
             end
         end
     end
 end
-Client.GetBoss = function()
-    local Boss = Workspace.MansionRobbery:FindFirstChild("ActiveBoss")
-    if Boss then
-        if Client.Main.Mag(Player.Character.Humanoid.RootPart, Boss.Head) < 100 then
-            return Boss
-        end
+
+local Old = Client.TagUtils.isPointInTag
+Client.TagUtils.isPointInTag = function(Args1, Args2)
+    if AntiRagdoll then
+        return true
+    else
+        return Old(Args1, Args2)
     end
 end
-local Ray = require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
-require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList = function(...)
-    local Args = {Ray(...)}
-    local Boss = Client.GetBoss()
-    local C = GetClosestTargetOnOtherTeam()
-    if Toggle or Kill then
-        if tostring(getfenv(2).script) == "BulletEmitter" and C and C.Character then
-            Args[1] = C.Character.Head
-            Args[2] = C.Character.Head.Position
-            Args[3] = C.Character.Head.Position
-            return unpack(Args)
-        elseif Boss and tostring(getfenv(2).script) == "BulletEmitter" then
-            Args[1] = Boss.Head
-            Args[2] = Boss.Head.Position
-            return unpack(Args)
-        end
+
+local New = Client.Falling.StartRagdolling
+Client.Falling.StartRagdolling = function(...)
+    if AntiRagdoll then
+        return
+    else
+        return New(...)
     end
-    return Ray(...)
 end
+
+local S = Client.InventoryItemSystem.playerHasItem
+Client.InventoryItemSystem.playerHasItem = function(Player, Key)
+    if Player == game:GetService("Players").LocalPlayer and Key == "Key" and AlwayKey then
+        return true
+    else
+        return S(Player, Key)
+    end
+end
+
 
 Client.GetAllGuns = function()
     setthreadcontext(2)
@@ -454,30 +447,6 @@ local Hello = Aim:CreateDropdown({
         Gun = v
     end;
     Options = Guns;
-    ItemSelecting = true;
-    DefaultItemSelected = "";
-    Warning = "This has a warning";
-    WarningIcon = 12345;
-})
-
-local PlayerTable = Aim:CreateDropdown({
-    Name = "Add Player To Killaura whitelist"; -- required: name of element
-    Callback = function(v)
-        table.insert(WhiteListed, v)
-    end;
-    Options = PlayersTable;
-    ItemSelecting = true;
-    DefaultItemSelected = "";
-    Warning = "This has a warning";
-    WarningIcon = 12345;
-})
-
-local PlayerTable2 = Aim:CreateDropdown({
-    Name = "Remove Player To Killaura whitelist"; -- required: name of element
-    Callback = function(v)
-        table.remove(WhiteListed, tonumber(v))
-    end;
-    Options = WhiteListed;
     ItemSelecting = true;
     DefaultItemSelected = "";
     Warning = "This has a warning";
@@ -920,13 +889,6 @@ RunService.Stepped:Connect(function()
             if CollectAirDropsForMe then
                 Client.AirDropCollect()
             end
-            for _,v in next, Players:GetPlayers() do
-                if v ~= Player and not table.find(PlayersTable, v.Name) then
-                    table.insert(PlayersTable, v.Name)
-                end
-            end
-            PlayerTable:Update(PlayersTable)
-            PlayerTable2:Update(WhiteListed)
             MasterTicks.Wait5 = tick()
         end
     end)
