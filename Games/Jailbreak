@@ -142,6 +142,19 @@ OldNameCall = hookmetamethod(game, "__index", function(A, B, ...)
     return OldNameCall(A, B, ...)
 end)
 
+local CheckTeam = function()
+    local Team = tostring(Player.Team)
+    if Team then
+        if Team == "Criminal" then
+            return "Police"
+        elseif Team == "Police" then
+            return "Criminal"
+        elseif Team == "Prisoner" then
+            return "Police"
+        end
+    end
+end
+
 local GetBoss = function()
     local Boss = Workspace.MansionRobbery:FindFirstChild("ActiveBoss")
     if Boss then
@@ -172,7 +185,6 @@ end
 local Ray = require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList
 require(ReplicatedStorage.Module.RayCast).RayIgnoreNonCollideWithIgnoreList = function(...)
     local Args = {Ray(...)}
-    local Boss = GetBoss()
     local C = GetClosestTargetOnOtherTeam()
     if Toggle or Kill then
         if tostring(getfenv(2).script) == "BulletEmitter" and C and C.Character then
@@ -265,19 +277,6 @@ Client.KillDropNPC = function()
                     end
                 end
             end
-        end
-    end
-end
-
-local CheckTeam = function()
-    local Team = tostring(Player.Team)
-    if Team then
-        if Team == "Criminal" then
-            return "Police"
-        elseif Team == "Police" then
-            return "Criminal"
-        elseif Team == "Prisoner" then
-            return "Police"
         end
     end
 end
