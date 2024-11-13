@@ -33,11 +33,17 @@ function CodeNest.WalkTo(Position)
     CodeNest.GetHumanoid():MoveTo(Position)
 end
 
-function CodeNest.CreatePath(Model, Position, Table)
+function CodeNest:CreatePath(Model, Position, Table)
     if Model and Position and Table then
-        local Travel = Global.PathfindingService:CreatePath(Table or {})
-        Travel:ComputeAsync(Model.PrimaryPart.Position, Position)
-        return Travel:GetWaypoints()
+        local Travel = PathfindingService:CreatePath(Table or {}) -- Telling the computer what we want in a table descriped below
+        local Success, Error = pcall(function()
+            Travel:ComputeAsync(Model.PrimaryPart.Position, Position) -- this basically just put in two positions and it makes a table with waypoints
+        end)
+        if Travel.Status == Enum.PathStatus.Success and Success then
+            return Travel:GetWaypoints()
+        else
+            print("Path to complex try a easier CFrame", Error)
+        end
     end
 end
 
