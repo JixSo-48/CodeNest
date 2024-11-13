@@ -2,6 +2,7 @@ math.randomseed(tick())
 local Services = setmetatable({}, {__index = function(Self, Index)
     return game:GetService(Index)
 end})
+local CurrentTick = tick()
 local wait = task.wait
 local spawn = task.spawn
 local ReplicatedStorage = Services.ReplicatedStorage
@@ -22,11 +23,6 @@ local Client = {
 }
 local BlackListed = {}
 local Coins = {}
-local Ticks = {
-    Tick1 = tick(),
-    Tick5 = tick(),
-    NoTick = tick(),
-}
 
 for i,v in next, Client.Break:GetChildren() do
     if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
@@ -79,7 +75,7 @@ Client.PurchaseFish = function()
     Client.TabController.OpenTab("CustomMerchant")
     for i,v in next, Player.PlayerGui._MACHINES.CustomMerchant.Frame.ItemsFrame.Items:GetChildren() do
         if v.Name == "CustomSlot" and v:FindFirstChild("Locked") and not v.Locked.Visible then
-            if v.Buy.Cost.Amount.Text ~= "Sold Out" then wait()
+            if v.Buy.Cost.Amount.Text ~= "Sold Out" then
                 for i,v in next, getconnections(v.Buy.Activated) do
                     v.Function()
                 end
@@ -93,7 +89,7 @@ end
 Client.Bloons = function()
     for i,v in next, Client.FlyingGifts:GetChildren() do
         if v:IsA("Model") and v:FindFirstChild("Giftbox") and v.Giftbox.Transparency == 0 then
-            if v.Giftbox:GetAttributes().FlyingGiftUID then wait()
+            if v.Giftbox:GetAttributes().FlyingGiftUID then
                 Client.Claim(v.Giftbox:GetAttributes().FlyingGiftUID)
             end
         end
@@ -115,21 +111,19 @@ Client.Vending = function()
             for i=1, 5 do
                 Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
             end
-            wait()
         end
     end
     Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
 end
 
 Client.GrabFruits = function()
+    local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
     for i,v in next, Client.Break:GetChildren() do
         if v:FindFirstChild("base") then
-            local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
             Player.Character.HumanoidRootPart.CFrame = v.base.Hitbox.CFrame
-            wait()
-            Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
         end
     end
+    Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
 end
 
 Client.AntiAFK = function()
@@ -627,9 +621,63 @@ Nig:CreateButton({
     end;
 })
 
-RunService.RenderStepped:Connect(function()
-    local A, B = pcall(function()
-        if tick() - Ticks.Tick1 >= 0.5 then
+spawn(function()
+    while wait(5) do
+        local A,B = pcall(function()
+            if Upgrade then
+                Client.Upgrade()
+            end
+            if AutoCraft then
+                Client.AutoCraft()
+            end
+            if Vending then
+                Client.Vending()
+            end
+            if FishMerchant then
+                Client.PurchaseFish()
+            end
+            for i, v in next, Client.Break:GetChildren() do
+                if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
+                    table.insert(Coins, tostring(v:GetAttributes().BreakableID))
+                end
+            end
+            Item:Update(Coins)
+            Item2:Update(BlackListed)
+        end)
+        if not A then
+            print(B)
+        end
+    end
+end)
+
+spawn(function()
+    while wait() do
+        local A, B = pcall(function()
+            if Collect then
+                Client.Collect()
+            end
+            if Breakables then
+                Client.settarget(Client.Nearest())
+            end
+            if Roll3 then
+                Client.InvokeServer("Eggs_Roll", {})
+            end
+            if StartFishing then
+                Client.Fish()
+            end
+            if Bloons then
+                Client.Bloons()
+            end
+        end)
+        if not A then
+            print(B)
+        end
+    end
+end)
+
+spawn(function()
+    while wait(1) do
+        local A, B = pcall(function()
             Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
             if Roll2 then
                 Client.InvokeServer("Bonus Rolls: Claim", {})
@@ -658,50 +706,9 @@ RunService.RenderStepped:Connect(function()
             if Relics then
                 Client.CollectRelics()
             end
-            Ticks.Tick1 = tick()
+        end)
+        if not A then
+            print(B)
         end
-        if tick() - Ticks.NoTick >= 0 then
-            if Collect then
-                Client.Collect()
-            end
-            if Breakables then
-                Client.settarget(Client.Nearest())
-            end
-            if Roll3 then
-                Client.InvokeServer("Eggs_Roll", {})
-            end
-            if StartFishing then
-                Client.Fish()
-            end
-            if Bloons then
-                Client.Bloons()
-            end
-            Ticks.NoTick = tick()
-        end
-        if tick() - Ticks.Tick5  >= 5 then
-            if Upgrade then
-                Client.Upgrade()
-            end
-            if AutoCraft then
-                Client.AutoCraft()
-            end
-            if Vending then
-                Client.Vending()
-            end
-            if FishMerchant then
-                Client.PurchaseFish()
-            end
-            for i, v in next, Client.Break:GetChildren() do
-                if v:IsA("Model") and v:GetAttributes().BreakableID and not table.find(Coins, tostring(v:GetAttributes().BreakableID)) then
-                    table.insert(Coins, tostring(v:GetAttributes().BreakableID))
-                end
-            end
-            Item:Update(Coins)
-            Item2:Update(BlackListed)
-            Ticks.Tick5 = tick()
-        end
-    end)
-    if not A then
-        print(B)
     end
 end)
