@@ -20,6 +20,11 @@ local Client = {
     Gifts = getsenv(Player.PlayerScripts.Scripts.Game["Hidden Gifts"]),
     Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
     Network = require(ReplicatedStorage.Library.Client.Network),
+    Ticks = {
+		NoTick = tick(),
+		Tick5 = tick(),
+		Tick1 = tick(),
+	},
 }
 local BlackListed = {}
 local Coins = {}
@@ -71,19 +76,21 @@ end
 
 Client.PurchaseFish = function()
     local Re = Player.Character.Humanoid.RootPart.CFrame
-    Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.PARTS.Platforms.FishingMerchant.Lock.CFrame
+    Player.Character:MoveTo(Workspace.MAP.PARTS.Platforms.FishingMerchant.Lock.CFrame.Position)
     Client.TabController.OpenTab("CustomMerchant")
     for i,v in next, Player.PlayerGui._MACHINES.CustomMerchant.Frame.ItemsFrame.Items:GetChildren() do
-        if v.Name == "CustomSlot" and v:FindFirstChild("Locked") and not v.Locked.Visible then
-            if v.Buy.Cost.Amount.Text ~= "Sold Out" then
-                for i,v in next, getconnections(v.Buy.Activated) do
-                    v.Function()
+        if v.Name == "CustomSlot" and v:FindFirstChild("Locked") and not v.Locked.Visible then wait()
+            repeat wait()
+                if v.Buy.Cost.Amount.Text ~= "Sold Out" then
+                    for i,v in next, getconnections(v.Buy.Activated) do
+                        v.Function()
+                    end
                 end
-            end
+            until v.Buy.Cost.Amount.Text == "Sold Out"
         end
     end
     Client.TabController.CloseTab("CustomMerchant")
-    Player.Character.Humanoid.RootPart.CFrame = Re * CFrame.new(0,1,0)
+    Player.Character:MoveTo(Re.Position)
 end
 
 Client.Bloons = function()
@@ -107,23 +114,23 @@ Client.Vending = function()
     for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
         local Vending = Workspace.MAP:FindFirstChild("Machines", true)
         if Vending and Vending:FindFirstChild(require(v).MachineName) and not Vending[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible then
-            Player.Character.HumanoidRootPart.CFrame = Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+            Player.Character:MoveTo(Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame().Position + Vector3.new(0,0,-15))
             for i=1, 5 do
                 Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
             end
         end
     end
-    Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
+    Player.Character:MoveTo(HumanoidRootPart.Position)
 end
 
 Client.GrabFruits = function()
     local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
     for i,v in next, Client.Break:GetChildren() do
         if v:FindFirstChild("base") then
-            Player.Character.HumanoidRootPart.CFrame = v.base.Hitbox.CFrame
+            Player.Character:MoveTo(v.base.Hitbox.CFrame.Position)
         end
     end
-    Player.Character.HumanoidRootPart.CFrame = HumanoidRootPart
+    Player.Character:MoveTo(HumanoidRootPart.Position)
 end
 
 Client.AntiAFK = function()
@@ -142,13 +149,10 @@ end
 
 Client.CollectGift = function()
     local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-    for i,v in next, getupvalue(Client.Gifts.attemptClaim, 4) do
-        Player.Character.Humanoid.RootPart.CFrame = v.Model.Model.CFrame * CFrame.new(Vector3.new(0,5,0))
-        for i=1, 5 do
-            Client.Gifts.attemptClaim(v)
-        end
+    for i,v in next, Workspace.__THINGS.HiddenGifts:GetChildren() do wait()
+        Player.Character:MoveTo(v.Model.Position)
     end
-    Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
+    Player.Character:MoveTo(PlayerHumanoid.Position)
 end
 
 Client.Nearest = function()
@@ -190,7 +194,6 @@ end
 
 Client.settarget = function(Coin)
     if Coin then
-        Client.ClickBreakable:FireServer("Coin")
         for i,v in next, Client.PlayerPet.GetAll() do
             if tostring(v.owner) == Player.Name then
                 Client.PlayerPet.SetTarget(v, Coin)
@@ -202,8 +205,8 @@ end
 Client.Fish = function()
     local H = Workspace.MAP.INTERACT:FindFirstChild("FishingPads")
     if H then
-        if not Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
-            Client.startFishing(Workspace.MAP.INTERACT.FishingPads.FishingBillboard)
+        if not Player.PlayerGui.Main.Left["Fishing Desktop"].Visible and H and H:FindFirstChild("FishingBillboard") then
+            Client.startFishing(H.FishingBillboard)
         end
         Client.InvokeServer("Fishing_Fish", {})
         wait()
@@ -245,12 +248,12 @@ end
 Client.AutoCraft = function()
     local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
     if Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine") then
-        Player.Character.Humanoid.RootPart.CFrame = Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame() * CFrame.new(0,0,-15)
+        Player.Character:MoveTo(Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame().Position + Vector3.new(0,0,-15))
         for i=1, 50 do
-            Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, math.round(Client.PotionAmount) or 1})
+            Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
         end
     end
-    Player.Character.Humanoid.RootPart.CFrame = PlayerHumanoid
+    Player.Character:MoveTo(PlayerHumanoid.Position)
 end
 
 local Speed = Client.PlayerPet.CalculateSpeedMultiplier
@@ -620,11 +623,62 @@ Nig:CreateButton({
         UI:Destroy()
     end;
 })
+local Tick1 = tick()
+local Tick0 = tick()
+local Tick5 = tick()
 
-spawn(function()
-    while wait(5) do
-        local A,B = pcall(function()
-            if Upgrade then
+RunService.RenderStepped:Connect(function()
+	local A, B = pcall(function()
+		if tick() - Tick1 >= 1 then
+			Tick1 = tick()
+			Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
+			if Roll2 then
+				Client.InvokeServer("Bonus Rolls: Claim", {})
+			end
+			if Gifts then
+				Client.CollectGift()
+			end
+			if GrabFruits then
+				Client.GrabFruits()
+			end
+			if Potion then
+				Client.Potion()
+			end
+			if Dig then
+				Client.Dig()
+			end
+			if Collect then
+				Client.Collect()
+			end
+			if Breakables then
+				Client.settarget(Client.Nearest())
+			end
+			if Fruit then
+				Client.Fruit()
+			end
+			if Relics then
+				Client.CollectRelics()
+			end
+		elseif tick() - Tick0 >= 0.1 then
+			Tick0 = tick()
+			if Collect then
+                Client.Collect()
+            end
+            if Breakables then
+                Client.settarget(Client.Nearest())
+            end
+            if Roll3 then
+                Client.InvokeServer("Eggs_Roll", {})
+            end
+            if StartFishing then
+                Client.Fish()
+            end
+            if Bloons then
+                Client.Bloons()
+            end
+		elseif tick() - Tick5 >= 5 then
+			Tick5 = tick()
+			if Upgrade then
                 Client.Upgrade()
             end
             if AutoCraft then
@@ -643,72 +697,10 @@ spawn(function()
             end
             Item:Update(Coins)
             Item2:Update(BlackListed)
-        end)
-        if not A then
-            print(B)
-        end
-    end
+		end
+	end)
+	if not A then
+		print(B)
+	end
 end)
 
-spawn(function()
-    while wait() do
-        local A, B = pcall(function()
-            if Collect then
-                Client.Collect()
-            end
-            if Breakables then
-                Client.settarget(Client.Nearest())
-            end
-            if Roll3 then
-                Client.InvokeServer("Eggs_Roll", {})
-            end
-            if StartFishing then
-                Client.Fish()
-            end
-            if Bloons then
-                Client.Bloons()
-            end
-        end)
-        if not A then
-            print(B)
-        end
-    end
-end)
-
-spawn(function()
-    while wait(1) do
-        local A, B = pcall(function()
-            Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
-            if Roll2 then
-                Client.InvokeServer("Bonus Rolls: Claim", {})
-            end
-            if Gifts then
-                Client.CollectGift()
-            end
-            if GrabFruits then
-                Client.GrabFruits()
-            end
-            if Potion then
-                Client.Potion()
-            end
-            if Dig then
-                Client.Dig()
-            end
-            if Collect then
-                Client.Collect()
-            end
-            if Breakables then
-                Client.settarget(Client.Nearest())
-            end
-            if Fruit then
-                Client.Fruit()
-            end
-            if Relics then
-                Client.CollectRelics()
-            end
-        end)
-        if not A then
-            print(B)
-        end
-    end
-end)
