@@ -1,3 +1,21 @@
+
+repeat wait() until game:IsLoaded()
+local Services = setmetatable({}, {__index = function(Self, Idx)
+    return game:GetService(Idx)
+end})
+
+local ScriptContext = Services.ScriptContext
+local Players = Services.Players
+local Player = Players.LocalPlayer
+
+for i,v in next, getconnections(ScriptContext.Error) do
+    v:Disable()
+end
+
+hookfunction(Player.Kick, function()
+    return
+end)
+
 local Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
 spawn(function()
     while wait() do
@@ -11,6 +29,7 @@ if not isfile("num_teleports.txt") then
 end
 
 writefile("num_teleports.txt", tostring(tonumber(readfile("num_teleports.txt"))+1))
+
 queue_on_teleport([[
     loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Teleport", true))()
 ]])
