@@ -1,4 +1,13 @@
-local Teleport = function(CFrame)
-	game:GetService("Players").LocalPlayer.Character.Humanoid:MoveTo(CFrame.Position)
+local Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
+spawn(function()
+    while wait() do
+        pcall(function()
+            Main.ServerHop()
+        end)
+    end
+end)
+if not isfile("num_teleports.txt") then
+    writefile("num_teleports.txt", "0")
 end
-return Teleport
+
+writefile("num_teleports.txt", tostring(tonumber(readfile("num_teleports.txt"))+1))
