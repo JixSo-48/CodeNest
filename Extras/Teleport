@@ -1,35 +1,4 @@
-
-repeat wait() until game:IsLoaded()
-local Services = setmetatable({}, {__index = function(Self, Idx)
-    return game:GetService(Idx)
-end})
-
-local ScriptContext = Services.ScriptContext
-local Players = Services.Players
-local Player = Players.LocalPlayer
-
-for i,v in next, getconnections(ScriptContext.Error) do
-    v:Disable()
-end
-
-hookfunction(Player.Kick, function()
-    return
-end)
-
-local Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))()
-spawn(function()
-    while wait() do
-        pcall(function()
-            Main.ServerHop()
-        end)
-    end
-end)
-if not isfile("num_teleports.txt") then
-    writefile("num_teleports.txt", "0")
-end
-
-writefile("num_teleports.txt", tostring(tonumber(readfile("num_teleports.txt"))+1))
-
+loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/a2cbb015d3db5ffb4334c8a23ad9e72a.lua"))()
 queue_on_teleport([[
-    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/a2cbb015d3db5ffb4334c8a23ad9e72a.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Teleport"))()
 ]])
