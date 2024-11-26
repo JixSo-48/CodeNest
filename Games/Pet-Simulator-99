@@ -1,5 +1,5 @@
 local Services = setmetatable({}, {__index = function(Self, Index)
-	return game:GetService(Index)
+    return game:GetService(Index)
 end})
 local Players = Services.Players
 local RunService = Services.RunService
@@ -12,7 +12,7 @@ local spawn = task.spawn
 local Client = {
     WantedRemotes = {},
     WhiteListed = {},
-    
+
 }
 local CurrentTick = tick()
 
@@ -42,11 +42,11 @@ for i,v in next, getgc() do
 end
 
 Client.FireServer = function(Remote, ...)
-	Client.Network.Fire(Remote, unpack(...))
+    Client.Network.Fire(Remote, unpack(...))
 end
 
 Client.InvokeServer = function(Remote, ...)
-	Client.Network.Invoke(Remote, unpack(...))
+    Client.Network.Invoke(Remote, unpack(...))
 end
 
 Client.Owned = function(Item)
@@ -141,7 +141,7 @@ end
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
     Name = "CodeNest: " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
-    ConfigFolder = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    ConfigFolder = "Pet Simulator 99";
     Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
     Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
     Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
@@ -165,85 +165,85 @@ local Destroy = Destroyer:CreateSection("Gui")
 
 
 Misc:CreateToggle({Name = "Auto Tap"; Flag = "sdf"; Default = false;
-	Callback = function(Value)
-		AutoTap = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        AutoTap = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 Misc:CreateToggle({Name = "Auto Ultimate"; Flag = "sdasduiasdhjkasdf"; Default = false;
-	Callback = function(Value)
-		AutoUltimate = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        AutoUltimate = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 Misc:CreateToggle({Name = "AutoFarm Next Zone"; Flag = "qweu"; Default = false;
-	Callback = function(Value)
-		Zones = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        Zones = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 Misc:CreateToggle({Name = "Auto Rebirth"; Flag = "qwweijklsdfheu"; Default = false;
-	Callback = function(Value)
-		Rebirth = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        Rebirth = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 Misc:CreateToggle({Name = "Auto Collect Orbs"; Flag = "ssfdhi"; Default = false;
-	Callback = function(Value)
-		Collect = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        Collect = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 Consume2:CreateToggle({Name = "Auto Eat Fruits"; Flag = "asdfj"; Default = false;
-	Callback = function(Value)
-		Fruits = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        Fruits = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 
 local Toys = Consume:CreateSection("Auto Toys")
 Toys:CreateToggle({Name = "Auto Use ToyDuck"; Flag = "asdfsj"; Default = false;
-	Callback = function(Value)
-		ToyDuck = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        ToyDuck = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 Toys:CreateToggle({Name = "Auto Use ToyBone"; Flag = "asdfsxj"; Default = false;
-	Callback = function(Value)
-		ToyBone = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        ToyBone = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
 Toys:CreateToggle({Name = "Auto Use ToyBall"; Flag = "asddfsxj"; Default = false;
-	Callback = function(Value)
-		ToyBall = Value
-	end;
-	Warning = "";
-	WarningIcon = 12345; 
+    Callback = function(Value)
+        ToyBall = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
     CallbackOnCreation = true;
 })
 
@@ -265,7 +265,7 @@ RunService.RenderStepped:Connect(function()
             end
             if Zones then
                 Client.AutoFarmZones()
-            end 
+            end
             if ToyDuck then
                 Client.UseItem("SqueakyToy")
             end
@@ -277,9 +277,11 @@ RunService.RenderStepped:Connect(function()
             end
             if AutoUltimate then
                 local Equipped = Client.UltimateCmds.GetEquippedItem()
-                local IsCharged = Client.UltimateCmds.IsCharged(Equipped._data.id)
-                if IsCharged then
-                    Client.UltimateCmds.Activate(Equipped._data.id)
+                if Equipped then
+                    local IsCharged = Client.UltimateCmds.IsCharged(Equipped._data.id)
+                    if IsCharged then
+                        Client.UltimateCmds.Activate(Equipped._data.id)
+                    end
                 end
             end
         end
