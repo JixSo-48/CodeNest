@@ -21,10 +21,10 @@ local Client = {
     Relics = getsenv(Player.PlayerScripts.Scripts.Game.Relics),
     Network = require(ReplicatedStorage.Library.Client.Network),
     Ticks = {
-		NoTick = tick(),
-		Tick5 = tick(),
-		Tick1 = tick(),
-	},
+        NoTick = tick(),
+        Tick5 = tick(),
+        Tick1 = tick(),
+    },
 }
 local BlackListed = {}
 local Coins = {}
@@ -279,7 +279,7 @@ Client.AntiAFK()
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
     Name = "CodeNest: " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
-    ConfigFolder = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    ConfigFolder = "Pets Go";
     Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
     Color = Color3.fromRGB(255, 0, 0); -- theme color for UI (required)
     Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
@@ -628,40 +628,40 @@ local Tick0 = tick()
 local Tick5 = tick()
 
 RunService.RenderStepped:Connect(function()
-	local A, B = pcall(function()
-		if tick() - Tick1 >= 1 then
-			Tick1 = tick()
-			Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
-			if Roll2 then
-				Client.InvokeServer("Bonus Rolls: Claim", {})
-			end
-			if Gifts then
-				Client.CollectGift()
-			end
-			if GrabFruits then
-				Client.GrabFruits()
-			end
-			if Potion then
-				Client.Potion()
-			end
-			if Dig then
-				Client.Dig()
-			end
-			if Collect then
-				Client.Collect()
-			end
-			if Breakables then
-				Client.settarget(Client.Nearest())
-			end
-			if Fruit then
-				Client.Fruit()
-			end
-			if Relics then
-				Client.CollectRelics()
-			end
-		elseif tick() - Tick0 >= 0.1 then
-			Tick0 = tick()
-			if Collect then
+    local A, B = pcall(function()
+        if tick() - Tick1 >= 1 then
+            Tick1 = tick()
+            Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
+            if Roll2 then
+                Client.InvokeServer("Bonus Rolls: Claim", {})
+            end
+            if Gifts then
+                Client.CollectGift()
+            end
+            if GrabFruits then
+                Client.GrabFruits()
+            end
+            if Potion then
+                Client.Potion()
+            end
+            if Dig then
+                Client.Dig()
+            end
+            if Collect then
+                Client.Collect()
+            end
+            if Breakables then
+                Client.settarget(Client.Nearest())
+            end
+            if Fruit then
+                Client.Fruit()
+            end
+            if Relics then
+                Client.CollectRelics()
+            end
+        elseif tick() - Tick0 >= 0.1 then
+            Tick0 = tick()
+            if Collect then
                 Client.Collect()
             end
             if Breakables then
@@ -676,9 +676,9 @@ RunService.RenderStepped:Connect(function()
             if Bloons then
                 Client.Bloons()
             end
-		elseif tick() - Tick5 >= 5 then
-			Tick5 = tick()
-			if Upgrade then
+        elseif tick() - Tick5 >= 5 then
+            Tick5 = tick()
+            if Upgrade then
                 Client.Upgrade()
             end
             if AutoCraft then
@@ -697,10 +697,9 @@ RunService.RenderStepped:Connect(function()
             end
             Item:Update(Coins)
             Item2:Update(BlackListed)
-		end
-	end)
-	if not A then
-		print(B)
-	end
+        end
+    end)
+    if not A then
+        print(B)
+    end
 end)
-
