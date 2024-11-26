@@ -14,6 +14,7 @@ local Client = {
     WhiteListed = {},
     
 }
+local CurrentTick = tick()
 
 for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
     Client[v.Name] = require(v)
@@ -120,7 +121,7 @@ Client.AutoFarmZones = function()
             Client.InvokeServer("Teleports_RequestTeleport", {Owned})
         end
         if Zone then
-            repeat wait() until (Player.Character.Humanoid.RootPart.Position - Zone.BREAK_ZONES.BREAK_ZONE.Position).magnitude < 100
+            repeat wait() until (Player.Character.Humanoid.RootPart.Position - Zone.BREAK_ZONES.BREAK_ZONE.Position).magnitude < 300
             if Zone:FindFirstChild("Buy Signs") then
                 Player.Character.Humanoid:MoveTo(Zone.BREAKABLE_SPAWNS.Main.Position + Vector3.new(0,1,0))
             elseif Zone:FindFirstChild("BREAKABLE_SPAWNS") and Zone.BREAKABLE_SPAWNS:FindFirstChild("Boss") then
@@ -136,32 +137,6 @@ Client.AutoFarmZones = function()
     Client.Collect()
     Client.Rebirth()
 end
-
-spawn(function()
-    while wait(.2) do
-        if AutoTap then
-            Client.Tap()
-        end
-        if Fruits then
-            Client.GetFruits()
-        end
-        if Collect then
-            Client.Collect()
-        end
-        if Zones then
-            Client.AutoFarmZones()
-        end 
-        if ToyDuck then
-            Client.UseItem("SqueakyToy")
-        end
-        if ToyBone then
-            Client.UseItem("ToyBone")
-        end
-        if ToyBall then
-            Client.UseItem("ToyBall")
-        end
-    end
-end)
 
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
 local UI = Atlas.new({
@@ -198,9 +173,27 @@ Misc:CreateToggle({Name = "Auto Tap"; Flag = "sdf"; Default = false;
     CallbackOnCreation = true;
 })
 
+Misc:CreateToggle({Name = "Auto Ultimate"; Flag = "sdasduiasdhjkasdf"; Default = false;
+	Callback = function(Value)
+		AutoUltimate = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
 Misc:CreateToggle({Name = "AutoFarm Next Zone"; Flag = "qweu"; Default = false;
 	Callback = function(Value)
 		Zones = Value
+	end;
+	Warning = "";
+	WarningIcon = 12345; 
+    CallbackOnCreation = true;
+})
+
+Misc:CreateToggle({Name = "Auto Rebirth"; Flag = "qwweijklsdfheu"; Default = false;
+	Callback = function(Value)
+		Rebirth = Value
 	end;
 	Warning = "";
 	WarningIcon = 12345; 
@@ -253,3 +246,45 @@ Toys:CreateToggle({Name = "Auto Use ToyBall"; Flag = "asddfsxj"; Default = false
 	WarningIcon = 12345; 
     CallbackOnCreation = true;
 })
+
+RunService.RenderStepped:Connect(function()
+    local A, B = pcall(function()
+        if tick() - CurrentTick >= 0.2 then
+            CurrentTick = tick()
+            if Rebirth then
+                Client.Rebirth()
+            end
+            if AutoTap then
+                Client.Tap()
+            end
+            if Fruits then
+                Client.GetFruits()
+            end
+            if Collect then
+                Client.Collect()
+            end
+            if Zones then
+                Client.AutoFarmZones()
+            end 
+            if ToyDuck then
+                Client.UseItem("SqueakyToy")
+            end
+            if ToyBone then
+                Client.UseItem("ToyBone")
+            end
+            if ToyBall then
+                Client.UseItem("ToyBall")
+            end
+            if AutoUltimate then
+                local Equipped = Client.UltimateCmds.GetEquippedItem()
+                local IsCharged = Client.UltimateCmds.IsCharged(Equipped._data.id)
+                if IsCharged then
+                    Client.UltimateCmds.Activate(Equipped._data.id)
+                end
+            end
+        end
+    end)
+    if not A then
+        print(B)
+    end
+end)
