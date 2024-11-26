@@ -820,6 +820,7 @@ RunService.Stepped:Connect(function()
             Player.Character.Humanoid.JumpPower = (DJumpPower and tonumber(Client.JumpPower)) or 50
         end
         if tick() - MasterTicks.NPCSTick >= 1 then
+            MasterTicks.NPCSTick = tick()
             if DDD then
                 Client.KillMasionNPCs()
             end
@@ -829,24 +830,24 @@ RunService.Stepped:Connect(function()
             if DropNPCS then
                 Client.KillDropNPC()
             end
-            MasterTicks.NPCSTick = tick()
         end
-        if tick() - MasterTicks.KillTick >= 0.5 then
+        if tick() - MasterTicks.KillTick >= 0.1 then
+            MasterTicks.KillTick = tick()
             if Kill then
                 Client.Shoot()
             end
-            MasterTicks.KillTick = tick()
         end
         if tick() - MasterTicks.PressTick >= 0.5 then
+            MasterTicks.PressTick = tick()
             if AlwayCarFlip then
                 Client.KeyPress(Enum.KeyCode.V)
             end
             if Lights then
                 Client.KeyPress(Enum.KeyCode.L)
             end
-            MasterTicks.PressTick = tick()
         end
         if tick() - MasterTicks.RawSetTick >= 1 then
+            MasterTicks.RawSetTick = tick()
             if PunchGuilty and Client.Settings.Time.PunchGuilty ~= 0 then
                 rawset(Client.Settings.Time, "PunchGuilty", 0)
             end
@@ -856,9 +857,9 @@ RunService.Stepped:Connect(function()
             if LavaFun2 and Workspace:FindFirstChild("LavaFun") and Workspace.LavaFun:FindFirstChild("Lavatouch") then
                 firetouchinterest(Player.Character.HumanoidRootPart, Workspace.LavaFun.Lavatouch, 0)
             end
-            MasterTicks.RawSetTick = tick()
         end
         if tick() - MasterTicks.CarTick >= 0.9 then
+            MasterTicks.CarTick = tick()
             if Client.EditCar() then
                 if TurnSpeed and Client.EditCar().TurnSpeed ~= TurnSpeedV then
                     Client.EditCar("TurnSpeed", TurnSpeedV)
@@ -885,10 +886,10 @@ RunService.Stepped:Connect(function()
                         Client.EditCar("TirePopProportion", 0)
                     end
                 end
-                MasterTicks.CarTick = tick()
             end
         end
         if tick() - MasterTicks.Wait5 >= 5 then
+            MasterTicks.Wait5 = tick()
             if Autoespcaue then
                 Client.AutoEscape()
             end
@@ -898,7 +899,7 @@ RunService.Stepped:Connect(function()
             if CollectAirDropsForMe then
                 Client.AirDropCollect()
             end
-            MasterTicks.Wait5 = tick()
+            
         end
     end)
     if not A then
