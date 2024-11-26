@@ -368,10 +368,8 @@ Client.Shoot = function()
         if C then
             Player.Folder[Gun2].InventoryEquipRemote:FireServer(true)
         end
-    elseif Equip and tostring(Equip.Model) == Gun2 then
-        if not C then
-            Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
-        end
+    elseif not C then
+        Player.Folder[Gun2].InventoryEquipRemote:FireServer(false)
     elseif not Player.Folder:FindFirstChild(Gun2) then
         Client.GetAllGuns()
     end
