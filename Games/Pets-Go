@@ -39,27 +39,26 @@ for i,v in next, ReplicatedStorage.Library.Client:GetChildren() do
     Client[v.Name] = require(v)
 end
 
-for i,v in next, getgc(true) do
-    if type(v) == "table" then
-        if rawget(v, "Click") then
-            Client.ClickBreakable = v.Click
-        end
-    end
+for i,v in next, getgc() do
     if type(v) == "function" and islclosure(v) then
         local Script = getfenv(v).script
         local Name = debug.info(v, "n")
         if Name == "requestRelics" then
             Client.requestRelics = v
-        elseif Name == "relicClicked" then
+        end
+        if Name == "relicClicked" then
             Client.relicClicked = v
-        elseif Script == Player.PlayerScripts.Scripts.Game.Fishing then
+        end
+        if Script == Player.PlayerScripts.Scripts.Game.Fishing then
             if Name == "startFishing" then
                 Client.startFishing = v
-            elseif Name == "stopFishing" then
+            end
+            if Name == "stopFishing" then
                 Client.stopFishing = v
                 Client.Old = v
             end
-        elseif Script == Player.PlayerScripts.Scripts.Game["Flying Gifts"] then
+        end
+        if Script == Player.PlayerScripts.Scripts.Game["Flying Gifts"] then
             if Name == "claim" then
                 Client.Claim = v
             end
@@ -73,24 +72,8 @@ end
 Client.InvokeServer = function(Remote, ...)
     Client.Network.Invoke(Remote, unpack(...))
 end
-
-Client.PurchaseFish = function()
-    local Re = Player.Character.Humanoid.RootPart.CFrame
-    Player.Character:MoveTo(Workspace.MAP.PARTS.Platforms.FishingMerchant.Lock.CFrame.Position)
-    Client.TabController.OpenTab("CustomMerchant")
-    for i,v in next, Player.PlayerGui._MACHINES.CustomMerchant.Frame.ItemsFrame.Items:GetChildren() do
-        if v.Name == "CustomSlot" and v:FindFirstChild("Locked") and not v.Locked.Visible then wait()
-            repeat wait()
-                if v.Buy.Cost.Amount.Text ~= "Sold Out" then
-                    for i,v in next, getconnections(v.Buy.Activated) do
-                        v.Function()
-                    end
-                end
-            until v.Buy.Cost.Amount.Text == "Sold Out"
-        end
-    end
-    Client.TabController.CloseTab("CustomMerchant")
-    Player.Character:MoveTo(Re.Position)
+Client.PivotTo = function(CF)
+    Player.Character:PivotTo(CF)
 end
 
 Client.Bloons = function()
@@ -113,24 +96,69 @@ Client.Vending = function()
     local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
     for i,v in next, ReplicatedStorage.__DIRECTORY.VendingMachines:GetChildren() do
         local Vending = Workspace.MAP:FindFirstChild("Machines", true)
-        if Vending and Vending:FindFirstChild(require(v).MachineName) and not Vending[require(v).MachineName].VendingMachine.Screen.SurfaceGui.SoldOut.Visible then
-            Player.Character:MoveTo(Workspace.MAP:FindFirstChild("Machines", true)[require(v).MachineName].VendingMachine:GetModelCFrame().Position + Vector3.new(0,0,-15))
+        local Name = require(v).MachineName
+        local Vend = Vending:FindFirstChild(Name, true)
+        if Vending and Vend and not Vend.VendingMachine.Screen.SurfaceGui.SoldOut.Visible then
+            Client.PivotTo(CFrame.new(Vend.Pad.Position + Vector3.new(0,5,15)))
             for i=1, 5 do
-                Client.InvokeServer("VendingMachines_Purchase", {require(v).MachineName})
+                Client.InvokeServer("VendingMachines_Purchase", {Name})
             end
         end
     end
-    Player.Character:MoveTo(HumanoidRootPart.Position)
+    Client.PivotTo(HumanoidRootPart)
+end
+
+Client.PurchaseFish = function()
+    local Re = Player.Character.Humanoid.RootPart.CFrame
+    Client.PivotTo(CFrame.new(Workspace.MAP.PARTS.Platforms.FishingMerchant.Lock.Position + Vector3.new(0,5,0)))
+    Client.TabController.OpenTab("CustomMerchant")
+    for i,v in next, Player.PlayerGui._MACHINES.CustomMerchant.Frame.ItemsFrame.Items:GetChildren() do
+        if v.Name == "CustomSlot" and v:FindFirstChild("Locked") and not v.Locked.Visible then wait()
+            repeat wait()
+                if v.Buy.Cost.Amount.Text ~= "Sold Out" then
+                    for i,v in next, getconnections(v.Buy.Activated) do
+                        v.Function()
+                    end
+                end
+            until v.Buy.Cost.Amount.Text == "Sold Out"
+        end
+    end
+    Client.TabController.CloseTab("CustomMerchant")
+    Client.PivotTo(Re)
 end
 
 Client.GrabFruits = function()
     local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
     for i,v in next, Client.Break:GetChildren() do
         if v:FindFirstChild("base") then
-            Player.Character:MoveTo(v.base.Hitbox.CFrame.Position)
+            Client.PivotTo(v.base.Hitbox.CFrame)
         end
     end
-    Player.Character:MoveTo(HumanoidRootPart.Position)
+    Client.PivotTo(HumanoidRootPart)
+end
+
+Client.CollectGift = function()
+    local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
+    for i,v in next, Workspace.__THINGS.HiddenGifts:GetChildren() do wait()
+        if v:FindFirstChild("Model") then
+            repeat wait()
+                Client.PivotTo(v.Model.CFrame * CFrame.new(0,5,0))
+            until not v:FindFirstChild("Model")
+        end
+    end
+    Client.PivotTo(PlayerHumanoid)
+end
+
+Client.AutoCraft = function()
+    local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
+    local PotionCraftingMachine =  Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine")
+    if PotionCraftingMachine then
+        Client.PivotTo(CFrame.new(PotionCraftingMachine:GetModelCFrame().Position + Vector3.new(0,0,-15)))
+        for i=1, 50 do
+            Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
+        end
+    end
+    Client.PivotTo(PlayerHumanoid)
 end
 
 Client.AntiAFK = function()
@@ -145,14 +173,6 @@ Client.CollectRelics = function()
     for i,v in next, getupvalue(Client.requestRelics, 1) do
         Client.relicClicked(v)
     end
-end
-
-Client.CollectGift = function()
-    local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-    for i,v in next, Workspace.__THINGS.HiddenGifts:GetChildren() do wait()
-        Player.Character:MoveTo(v.Model.Position)
-    end
-    Player.Character:MoveTo(PlayerHumanoid.Position)
 end
 
 Client.Nearest = function()
@@ -245,17 +265,6 @@ Client.Upgrade = function()
     end
 end
 
-Client.AutoCraft = function()
-    local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
-    if Workspace.MAP.INTERACT.Machines:FindFirstChild("PotionCraftingMachine") then
-        Player.Character:MoveTo(Workspace.MAP.INTERACT.Machines.PotionCraftingMachine:GetModelCFrame().Position + Vector3.new(0,0,-15))
-        for i=1, 50 do
-            Client.InvokeServer("CraftingMachine_Craft", {"PotionCraftingMachine", i, 1})
-        end
-    end
-    Player.Character:MoveTo(PlayerHumanoid.Position)
-end
-
 local Speed = Client.PlayerPet.CalculateSpeedMultiplier
 Client.PlayerPet.CalculateSpeedMultiplier = function(...)
     if not Speedy then
@@ -274,6 +283,7 @@ L = hookfunction(Client.stopFishing, function(...)
         return L(...)
     end
 end)
+
 Client.AntiAFK()
 
 local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
