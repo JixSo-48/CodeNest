@@ -63,6 +63,11 @@ for i,v in next, getgc() do
                 Client.Claim = v
             end
         end
+        if Script == Player.PlayerScripts.Scripts.Event["Turkey Chase"] then
+            if Name == "claim" then
+                Client.ChaseClaim = v
+            end
+        end
     end
 end
 Client.FireServer = function(Remote, ...)
@@ -76,6 +81,16 @@ Client.PivotTo = function(CF)
     Player.Character:PivotTo(CF)
 end
 
+Client.Feathers = function()
+    for i,v in next, Workspace.__THINGS.Pets:GetChildren() do
+        if v:IsA("Model") and not string.match(v.Name, "^%d+$") then
+            v[v.Name].CFrame = Player.Character.Humanoid.RootPart.CFrame
+            Client.ChaseClaim(v.Name)
+
+            print(i,v)
+        end
+    end
+end
 Client.Bloons = function()
     for i,v in next, Client.FlyingGifts:GetChildren() do
         if v:IsA("Model") and v:FindFirstChild("Giftbox") and v.Giftbox.Transparency == 0 then
@@ -128,25 +143,19 @@ Client.PurchaseFish = function()
 end
 
 Client.GrabFruits = function()
-    local HumanoidRootPart = Player.Character.HumanoidRootPart.CFrame
     for i,v in next, Client.Break:GetChildren() do
         if v:FindFirstChild("base") then
-            Client.PivotTo(v.base.Hitbox.CFrame)
+            v.base.Hitbox.CFrame = Player.Character.Humanoid.RootPart.CFrame
         end
     end
-    Client.PivotTo(HumanoidRootPart)
 end
 
 Client.CollectGift = function()
-    local PlayerHumanoid = Player.Character.Humanoid.RootPart.CFrame
     for i,v in next, Workspace.__THINGS.HiddenGifts:GetChildren() do wait()
         if v:FindFirstChild("Model") then
-            repeat wait()
-                Client.PivotTo(v.Model.CFrame * CFrame.new(0,5,0))
-            until not v:FindFirstChild("Model")
+            Player.Character.HumanoidRootPart.CFrame = v.Model.CFrame * CFrame.new(0,3,0)
         end
     end
-    Client.PivotTo(PlayerHumanoid)
 end
 
 Client.AutoCraft = function()
@@ -401,6 +410,17 @@ AutoRoll2:CreateToggle({
     WarningIcon = 12345;
     CallbackOnCreation = true;
 })
+AutoRoll2:CreateToggle({
+    Name = "Auto Feathers";
+    Flag = "asdfsdfddddddddddfddsfsfdsf";
+    Default = false;
+    Callback = function(Value)
+        Feathers = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
 
 AutoRoll2:CreateToggle({
     Name = "Auto Claim Bonus Roll";
@@ -642,6 +662,9 @@ RunService.RenderStepped:Connect(function()
         if tick() - Tick1 >= 1 then
             Tick1 = tick()
             Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
+            if Feathers then
+                Client.Feathers()
+            end
             if Roll2 then
                 Client.InvokeServer("Bonus Rolls: Claim", {})
             end
