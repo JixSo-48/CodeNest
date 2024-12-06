@@ -1,0 +1,48 @@
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local ScriptContext = game:GetService("ScriptContext")
+local Player = Players.LocalPlayer
+local wait = task.wait
+local spawn = task.spawn
+local IceSkatingMinigameClient = require(ReplicatedStorage.SharedModules.ContentPacks.Winter2024.Minigames.IceSkatingMinigameClient)
+local RouterClient = require(ReplicatedStorage.ClientModules.Core.RouterClient.RouterClient)
+
+for i, v in next, getupvalue(RouterClient.init, 7) do
+    v.Name = i
+end
+
+Client.Init = function()
+    for i,v in next, getupvalue(IceSkatingMinigameClient.render, 14) do
+        ReplicatedStorage:WaitForChild("API"):WaitForChild("WinterEventAPI/PickUpGingerbread"):InvokeServer(i)
+        if Client.SpamRaceToggle then
+            ReplicatedStorage:WaitForChild("API"):WaitForChild("WinterEventAPI/SubmitIceSkatingTime"):FireServer(Client.Racetime)
+        end
+    end
+    ReplicatedStorage:WaitForChild("API"):WaitForChild("WinterEventAPI/RedeemPendingGingerbread"):FireServer()
+end
+
+Client.DisableConnection = function(Sig)
+    if Sig then
+        for i,v in next, getconnections(Sig) do
+            v:Disable()
+        end
+    end
+end
+if Client.AntiAFK then
+    Client.DisableConnection(Player.Idled)
+    Client.DisableConnection(ScriptContext.Error)
+end
+
+spawn(function()
+    while wait() do
+        if Client.ToggleCollectingGingerBread then
+            pcall(Client.Init)
+        else
+            break
+        end
+    end
+end)
