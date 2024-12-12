@@ -1,0 +1,597 @@
+
+local Services = setmetatable({}, {__index = function(Self, Service)
+    return game:GetService(Service)
+end})
+local ReplicatedStorage = Services.ReplicatedStorage
+local Players = Services.Players
+local RunService = Services.RunService
+local Workspace = Services.Workspace
+local ScriptContext = Services.ScriptContext
+local LogService = Services.LogService
+local Player = Players.LocalPlayer
+local Connection
+
+local Client = {
+    FYS = ReplicatedStorage:WaitForChild("Fsys", 50),
+    Fur = Workspace.HouseInteriors:WaitForChild("furniture", 50),
+    Toilets = {
+        "generic_toilet",
+    },
+    Showers = {
+        "pet_bathtub",
+    },
+    Beds = {
+        "generic_crib",
+    },
+    Foods = {
+        "generic_food_bowl",
+    },
+    Waters = {
+        "generic_water_bowl",
+    },
+    Ticks = {
+        Tick5 = tick(),
+        Tick1 = tick(),
+    },
+    PetsTable = {},
+    Ids = {}
+}
+repeat wait() until table.find(getloadedmodules(), Client.FYS)
+local RequireMain = require(Client.FYS)
+
+Client.Load = function(TableName)
+    local Old = get_thread_identity()
+    set_thread_identity(2)
+    local loading = RequireMain.load(TableName)
+    set_thread_identity(Old)
+    return loading
+end
+
+local RouterClient = Client.Load("RouterClient")
+local PetEntityManager = Client.Load("PetEntityManager")
+local ClientData = Client.Load("ClientData")
+local UIManager = Client.Load("UIManager")
+local InteriorsM = Client.Load("InteriorsM")
+-------------------------------------------------------- Main Functions
+Client.SetLocation = function(A, B, C)
+    local O = get_thread_identity()
+    set_thread_identity(2)
+    InteriorsM.enter(A, B, C)
+    set_thread_identity(O)
+end
+
+Client.DisableConnection = function(Sig)
+    for i,v in next, getconnections(Sig) do
+        v:Disable()
+    end
+end
+
+Client.FireConnection = function(Sig)
+    for i,v in next, getconnections(Sig) do
+        v:Fire()
+    end
+end
+
+Client.FireServer = function(RemoteName, Args)
+    local RealRemote = ReplicatedStorage:FindFirstChild(RemoteName, true)
+    if RemoteName and RealRemote then
+        RealRemote:FireServer(unpack(Args))
+    end
+end
+
+Client.InvokeServer = function(RemoteName, Args)
+    local RealRemote = ReplicatedStorage:FindFirstChild(RemoteName, true)
+    if RemoteName and RealRemote then
+        RealRemote:InvokeServer(unpack(Args))
+    end
+end
+
+Client.getEquippedPet = function()
+    for i,v in next, PetEntityManager.get_local_owned_pet_entities() do
+        return v
+    end
+end
+
+Client.SwitchTeams = function(Team, SendHome)
+    Client.InvokeServer(
+        "TeamAPI/ChooseTeam", 
+        {
+            Team, 
+            {
+                ["dont_send_back_home"] = SendHome,
+                ["source_for_logging"] = "RouterClient"
+            }
+        }
+    )
+end
+Client.MapLoad = function()
+    Client.SwitchTeams("Babies", false)
+    UIManager.set_app_visibility('MainMenuApp', false);
+    UIManager.set_app_visibility('NewsApp', false);
+    UIManager.set_app_visibility("DialogApp", false)
+end
+Client.FindBed = function()
+    for i,v in next, Client.Fur:GetChildren() do
+        if v:FindFirstChild("use_id", true) then
+            if table.find(Client.Beds, v:FindFirstChild("use_id", true).Value) then
+                local F = string.split(v.Name, "true/")[2]
+                print(F)
+                return {"UseBlock", F}
+            end
+        end 
+    end
+end
+Client.FindToilet = function()
+    for i,v in next, Client.Fur:GetChildren() do
+        if v:FindFirstChild("use_id", true) then
+            if table.find(Client.Toilets, v:FindFirstChild("use_id", true).Value) then
+                local F = string.split(v.Name, "true/")[2]
+                return {"Seat1", F}
+            end
+        end 
+    end
+end
+Client.FindShower = function()
+    for i,v in next, Client.Fur:GetChildren() do
+        if v:FindFirstChild("use_id", true) then
+            if table.find(Client.Showers, v:FindFirstChild("use_id", true).Value) then
+                local F = string.split(v.Name, "true/")[2]
+                return {"UseBlock", F}
+            end
+        end 
+    end
+end
+
+Client.FindFood = function()
+    for i,v in next, Client.Fur:GetChildren() do
+        if v:FindFirstChild("use_id", true) then
+            if table.find(Client.Foods, v:FindFirstChild("use_id", true).Value) then
+                local F = string.split(v.Name, "true/")[2]
+                return {"UseBlock", F}
+            end
+        end 
+    end
+end
+
+Client.FindWater = function()
+    for i,v in next, Client.Fur:GetChildren() do
+        if v:FindFirstChild("use_id", true) then
+            if table.find(Client.Waters, v:FindFirstChild("use_id", true).Value) then
+                local F = string.split(v.Name, "true/")[2]
+                return {"UseBlock", F}
+            end
+        end 
+    end
+end
+
+
+Client.GetData = function()
+    return ClientData.get_data()[Player.Name]
+end
+
+----------------------------------------------------- Main Tables 
+
+Client.Tasks = {
+    school = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        while Client.getEquippedPet().ailments.school do wait(1)
+            if not Client.getEquippedPet().ailments.school then
+                return
+            end
+            
+            if not Workspace.Interiors:FindFirstChild("School") then
+                Client.SetLocation('School', 'MainDoor', {});
+            end
+            Player.Character.HumanoidRootPart.CFrame = Workspace.Interiors:FindFirstChildWhichIsA('Model').Doors.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6))
+        end
+    end,
+    pizza_party = function()
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        while Client.getEquippedPet().ailments.pizza_party do wait(1)
+            if not Client.getEquippedPet().ailments.pizza_party then
+                return
+            end
+            
+            if not Workspace.Interiors:FindFirstChild("PizzaShop") then
+                Client.SetLocation('PizzaShop', 'MainDoor', {});
+            end
+            Player.Character.HumanoidRootPart.CFrame = Workspace.Interiors:FindFirstChildWhichIsA('Model').Doors.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6))
+        end
+        
+    end,
+    salon = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        while Client.getEquippedPet().ailments.salon do
+            if not Client.getEquippedPet().ailments.salon then
+                return
+            end
+            
+            if not Workspace.Interiors:FindFirstChild("Salon") then
+                Client.SetLocation("Salon", 'MainDoor', {});
+            end
+            Player.Character.HumanoidRootPart.CFrame = Workspace.Interiors:FindFirstChildWhichIsA('Model').Doors.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6))
+        end
+    end,
+    sick = function()
+        while Client.getEquippedPet().ailments.sick do wait(1)
+            if not Client.getEquippedPet().ailments.sick then
+                return
+            end
+            Client.InvokeServer("ShopAPI/BuyItem", {"food","healing_apple",{["buy_count"] = 9e9}})
+            for i,v in next, Client.GetData().inventory.food do
+                if v.id == "healing_apple" then
+                    local Args = {
+                            [1] = "__Enum_PetObjectCreatorType_2",
+                            [2] = {
+                                ["spawn_cframe"] = Player.Character.Humanoid.RootPart.CFrame,
+                                ["possible_grabber_pet_unique"] = string.split(Client.getEquippedPet().unique_id, "-")[1],
+                                ["grab_immediately"] = false,
+                                ["pet_unique"] = string.split(Client.getEquippedPet().unique_id, "-")[1],
+                                ["unique_id"] = v.unique,
+                            }
+                        }
+
+                    Client.InvokeServer("PetObjectAPI/CreatePetObject", Args)
+                    return
+                end
+            end
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+
+    sleepy = function()
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        while Client.getEquippedPet().ailments.sleepy do wait(1)
+            if not Client.getEquippedPet().ailments.sleepy then
+                return
+            end
+            if not House then
+                Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+                Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6)) 
+            end
+            Client.InvokeServer(
+                "HousingAPI/ActivateFurniture",
+                {
+                    Player,
+                    Client.FindBed()[2],
+                    Client.FindBed()[1],
+                    {["cframe"] = CFrame.new(Player.Character:GetModelCFrame().Position + Vector3.new(0,5,0))},
+                    Model,
+                }
+            )
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    play = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        while Client.getEquippedPet().ailments.play do wait(1)
+            if not Client.getEquippedPet().ailments.play then
+                return
+            end
+            if not House then
+                Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+                Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6)) 
+            end
+            for i,v in next, Client.GetData().inventory.toys do wait(3)
+                if v.id == "squeaky_bone_default" then
+                    Client.InvokeServer(
+                        "PetObjectAPI/CreatePetObject",
+                        {
+                        "__Enum_PetObjectCreatorType_1" ,
+                            {
+                                ["reaction_name"] = "ThrowToyReaction",
+                                ["unique_id"] = v.unique
+                            } 
+                        }
+                    )
+                end
+            end
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    walk = function()
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        local Model = Workspace.Interiors:FindFirstChildWhichIsA("Model")
+        while Client.getEquippedPet().ailments.walk do wait(1)
+            if not Client.getEquippedPet().ailments.walk then
+                return
+            end
+            if House then
+                Client.SetLocation('MainMap', 'Neighborhood/MainDoor', {})
+            end
+            Client.FireServer("AdoptAPI/HoldBaby", { Client.getEquippedPet().base.pet_model.Parent})
+            wait(1)
+            Player.Character:SetPrimaryPartCFrame(CFrame.new(0,90000,0))
+        end
+        if not House then
+            Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+        end
+        Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6))
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    dirty = function()
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        while Client.getEquippedPet().ailments.dirty do wait(1)
+            if not Client.getEquippedPet().ailments.dirty then
+                return
+            end
+            if not House then
+                Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+                Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6)) 
+            end 
+            Client.InvokeServer(
+                "HousingAPI/ActivateFurniture",
+                {
+                    Player,
+                    Client.FindShower()[2],
+                    Client.FindShower()[1],
+                    {["cframe"] = CFrame.new(Player.Character:GetModelCFrame().Position + Vector3.new(0,5,0))},
+                    Model,
+                }
+            )
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    bored = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        while Client.getEquippedPet().ailments.bored do wait(1)
+            if not Client.getEquippedPet().ailments.bored then
+                return
+            end
+            if House then
+                Client.SetLocation('MainMap', 'Neighborhood/MainDoor', {})
+            end
+            Player.Character.HumanoidRootPart.CFrame = CFrame.new(Workspace.StaticMap.Park.AilmentTarget.Position + Vector3.new(0, 5, 0))
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    beach_party = function()
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        while Client.getEquippedPet().ailments.beach_party do wait(1)
+            if not Client.getEquippedPet().ailments.beach_party then
+                return
+            end
+            
+            if House then
+                
+                Client.SetLocation('MainMap', 'Neighborhood/MainDoor', {})
+            end
+            Player.Character.Humanoid.RootPart.CFrame = CFrame.new(Workspace.StaticMap.Beach.BeachPartyAilmentTarget.Position + Vector3.new(0, 5, 0))
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    camping = function()
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        while Client.getEquippedPet().ailments.camping do wait(1)
+            if not Client.getEquippedPet().ailments.camping then
+                return
+            end
+            
+            if House then
+                Client.SetLocation('MainMap', 'Neighborhood/MainDoor', {})
+            end
+            Player.Character.Humanoid.RootPart.CFrame = CFrame.new(Workspace.StaticMap.Campsite.CampsiteOrigin.CFrame.Position + Vector3.new(0, 5, 0))
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    ride = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        while Client.getEquippedPet().ailments.ride do wait(1)
+            
+            if House then
+                Client.SetLocation('MainMap', 'Neighborhood/MainDoor', {})
+            end
+            for i,v in next, Client.GetData().inventory.strollers do
+                if v.id == "stroller-default" then
+                    local Self = v.unique
+                    Client.InvokeServer("ToolAPI/Equip", {v.unique,{}})
+                    wait(2)
+                    Player.Character:SetPrimaryPartCFrame(CFrame.new(0,90000,0))
+                end
+            end
+        end
+        if not House then
+            Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+            Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6)) 
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    toilet = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        while Client.getEquippedPet().ailments.toilet do wait(1)
+            if not Client.getEquippedPet().ailments.toilet then
+                return
+            end
+            if not House then
+                Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+                Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6)) 
+            end
+            Client.InvokeServer(
+                "HousingAPI/ActivateFurniture",
+                {
+                    Player,
+                    Client.FindToilet()[2],
+                    Client.FindToilet()[1],
+                    {["cframe"] = CFrame.new(Player.Character:GetModelCFrame().Position + Vector3.new(0,5,0))},
+                    Model,
+                }
+            )
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+    thirsty = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        while Client.getEquippedPet().ailments.thirsty do wait(1)
+            if not Client.getEquippedPet().ailments.thirsty then
+                return
+            end
+            if not House then
+                Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+                Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6)) 
+            end
+
+            Client.InvokeServer(
+                "HousingAPI/ActivateFurniture",
+                {
+                    Player, 
+                    Client.FindWater()[2],
+                    Client.FindWater()[1],
+                    {["cframe"] = CFrame.new(Player.Character:GetModelCFrame().Position + Vector3.new(0,5,0))},
+                    Model,
+                }
+                
+            )
+        end    
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}})    
+    end,
+    hungry = function()
+        local House = Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name)
+        local Model = Client.getEquippedPet().base.pet_model.Parent
+        while Client.getEquippedPet().ailments.hungry do
+            if not Client.getEquippedPet().ailments.hungry then
+                return
+            end
+            if not House then
+                Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+                Player.Character.HumanoidRootPart.CFrame = House.MainDoor.WorkingParts.TouchToEnter.CFrame:ToWorldSpace(CFrame.new(0, 0, -6)) 
+            end
+            Client.InvokeServer(
+                "HousingAPI/ActivateFurniture",
+                {
+                    Player,  
+                    Client.FindFood()[2],
+                    Client.FindFood()[1],
+                    {["cframe"] = CFrame.new(Player.Character:GetModelCFrame().Position + Vector3.new(0,5,0))},
+                    Model,
+                }
+            )
+        end
+        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+    end,
+}
+
+--------------------------------------------------- Client Setup
+Client.DisableConnection(Player.Idled)
+Client.DisableConnection(ScriptContext.Error)
+for i, v in next, getupvalue(RouterClient.init, 7) do
+    v.Name = i
+end
+Client.MapLoad()
+
+for i,v in next, Client.GetData().inventory.pets do
+    if v.id and v.properties and v.properties.age and v.kind ~= "practice_dog" then
+        local Key = v.id .. " - Age " .. v.properties.age
+        Client.PetsTable[Key] = v
+        table.insert(Client.Ids, Key)
+    end
+end
+
+for i,v in next, Client.PetsTable do
+    Key = v
+end
+
+--------------------------------------------------- GUI
+local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
+local UI = Atlas.new({
+    Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    ConfigFolder = "Jailbreak";
+    Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
+    Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
+    Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
+    -- Atlas Loader:
+    UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
+    FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
+    CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
+        return true
+    end;
+    Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
+})
+
+local AutoFarm = UI:CreatePage("AutoFarms")
+local PetFarm2 = AutoFarm:CreateSection("Pet Farm")
+
+PetFarm2:CreateToggle({
+    Name = "Pet Farm";
+    Flag = "PetFarm";
+    Default = false;
+    Callback = function(Value)
+        PetFarm = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+PetFarm2:CreateDropdown({
+    Name = "Pets"; -- required: name of element
+    Callback = function(v)
+        Key = Client.PetsTable[v]
+    end;
+    Options = Client.Ids;
+    ItemSelecting = true;
+    DefaultItemSelected = "";
+    Warning = "This has a warning";
+    WarningIcon = 12345;
+})
+
+--------------------------------------------------- Main Loop
+
+spawn(function()
+    while wait() do
+        local A, B = pcall(function()
+            if PetFarm then
+                if tick() - Client.Ticks.Tick1 >= 1 then
+                    Client.Ticks.Tick1 = tick()
+                    if Client.getEquippedPet() then
+                        Client.FireServer("AdoptAPI/HoldBaby", { Client.getEquippedPet().base.pet_model.Parent})
+                        for i,v in next, Client.getEquippedPet().ailments do
+                            if Client.Tasks[i] then
+                                Client.Tasks[i]()
+                                break
+                            end
+                        end
+                        if not Workspace.HouseInteriors.blueprint:FindFirstChild(Player.Name) then
+                            Client.SetLocation('housing', 'MainDoor', {['house_owner'] = Player})
+                        end
+                    elseif not Client.getEquippedPet() then
+                        Client.InvokeServer("ToolAPI/Unequip",{Key.unique, {}})
+                        Client.InvokeServer("ToolAPI/Equip", {Key.unique, {}}) 
+                    end
+                end
+            end
+        end)
+        if not A then
+            print(B)
+        end
+    end
+end)
+
+Connection = RunService.Stepped:Connect(function()
+    local A, B = pcall(function()
+    end)
+end)
+
+Connection:Disconnect()
