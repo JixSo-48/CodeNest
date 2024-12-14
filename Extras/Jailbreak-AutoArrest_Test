@@ -44,7 +44,7 @@ local Client = {
 }
 local Parts = {}
 -- AntiCheat
-for i,v in next, getgc(true) do
+for i,v in next, getgc() do
     if typeof(v) == 'function' and islclosure(v) then
         if debug.info(v, "n"):match("CheatCheck") then
             hookfunction(v, function() return end)
