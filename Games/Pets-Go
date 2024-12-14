@@ -656,6 +656,7 @@ local Tick0 = tick()
 local Tick5 = tick()
 
 RunService.RenderStepped:Connect(function()
+    local A, B = pcall(function()
         if tick() - Tick1 >= 1 then
             Tick1 = tick()
             Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
@@ -726,7 +727,7 @@ RunService.RenderStepped:Connect(function()
             Item:Update(Coins)
             Item2:Update(BlackListed)
         end
-
+    end)
     if not A then
         print(B)
     end
