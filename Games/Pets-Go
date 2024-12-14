@@ -63,11 +63,6 @@ for i,v in next, getgc() do
                 Client.Claim = v
             end
         end
-        if Script == Player.PlayerScripts.Scripts.Event["Turkey Chase"] then
-            if Name == "claim" then
-                Client.ChaseClaim = v
-            end
-        end
     end
 end
 Client.FireServer = function(Remote, ...)
@@ -81,16 +76,7 @@ Client.PivotTo = function(CF)
     Player.Character:PivotTo(CF)
 end
 
-Client.Feathers = function()
-    for i,v in next, Workspace.__THINGS.Pets:GetChildren() do
-        if v:IsA("Model") and not string.match(v.Name, "^%d+$") then
-            v[v.Name].CFrame = Player.Character.Humanoid.RootPart.CFrame
-            Client.ChaseClaim(v.Name)
 
-            print(i,v)
-        end
-    end
-end
 Client.Bloons = function()
     for i,v in next, Client.FlyingGifts:GetChildren() do
         if v:IsA("Model") and v:FindFirstChild("Giftbox") and v.Giftbox.Transparency == 0 then
@@ -237,7 +223,7 @@ Client.Fish = function()
         if not Player.PlayerGui.Main.Left["Fishing Desktop"].Visible and H and H:FindFirstChild("FishingBillboard") then
             Client.startFishing(H.FishingBillboard)
         end
-        Client.InvokeServer("Fishing_Fish", {})
+        Client.InvokeServer("Fishing_Fish", {(IceFishing and "Ice") or "Default"})
         wait()
         Client.FireServer("Fishing_Success", {})
         if not StartFishing and Player.PlayerGui.Main.Left["Fishing Desktop"].Visible then
@@ -440,6 +426,18 @@ AutoRoll2:CreateToggle({
     Default = false;
     Callback = function(Value)
         StartFishing = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+AutoRoll2:CreateToggle({
+    Name = "Auto Ice Fish";
+    Flag = "asdfsdfddsad22fdsdcfdsf";
+    Default = false;
+    Callback = function(Value)
+        IceFishing = Value
     end;
     Warning = "";
     WarningIcon = 12345;
@@ -658,13 +656,10 @@ local Tick0 = tick()
 local Tick5 = tick()
 
 RunService.RenderStepped:Connect(function()
-    local A, B = pcall(function()
         if tick() - Tick1 >= 1 then
             Tick1 = tick()
             Player.PlayerScripts.Scripts.Core["Idle Tracking"].Enabled = false
-            if Feathers then
-                Client.Feathers()
-            end
+
             if Roll2 then
                 Client.InvokeServer("Bonus Rolls: Claim", {})
             end
@@ -731,7 +726,7 @@ RunService.RenderStepped:Connect(function()
             Item:Update(Coins)
             Item2:Update(BlackListed)
         end
-    end)
+
     if not A then
         print(B)
     end
