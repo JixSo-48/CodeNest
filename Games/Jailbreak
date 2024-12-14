@@ -24,18 +24,17 @@ local Client = {
     TagUtils = require(ReplicatedStorage.Tag.TagUtils),
     ControlModule = require(Player.PlayerScripts.PlayerModule.ControlModule),
     RobberyConsts = require(ReplicatedStorage.Robbery.RobberyConsts),
-    ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
     ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
     Gun = require(ReplicatedStorage.Game.Item.Gun),
     GunShopUI = require(ReplicatedStorage.Game.GunShop.GunShopUI),
     ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
     Notification = require(ReplicatedStorage.Game.Notification),
     Falling = require(ReplicatedStorage.Game.Falling),
-    Doors = {},
     Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))(),
     WalkSpeed = 16,
     JumpPower = 50,
-    TaskTick = tick()
+	Tasks = {},
+    Doors = {}
 }
 Client.NotificationSystem = function(text)
     Client.Notification.new(
@@ -94,33 +93,31 @@ for i,v in next, getgc(true) do
             Client.GetLocalVehiclePacket = v.GetLocalVehiclePacket
         end
     elseif typeof(v) == 'function' and islclosure(v) then
-        local Name = debug.info(v, "n")
+        local Name, Script = debug.info(v, "n"), getfenv(v).script
         if table.find(getconstants(v), 'SequenceRequireState') then
             Client.Door = v
         elseif Name == "CheatCheck" then
-            AntiCheat = v
+            Client.Tasks[v] = v
         elseif Name == "WalkSpeedFun" then
-            WalkSpeedFun = v
+            Client.Tasks[v] = v
         elseif Name == "ShootRocket" then
-
+			Client.Tasks[v] = v
         elseif Name == "_fire" then
-            hookfunction(v, function(...)
-                return
-            end)
+            Client.Tasks[v] = v
         elseif Name == "ShootLaser" then
-            hookfunction(v, function()
-                return
-            end)
+            Client.Tasks[v] = v
+        end
+        if Script == Player.PlayerScripts.LocalScript then
+            if Name == "DoorPlayer" then
+                Client.Doors[i] = getupvalue(v, 3)
+            end
         end
     end
 end
-hookfunction(AntiCheat, function()
-    return
-end)
 
-hookfunction(WalkSpeedFun, function()
-    return
-end)
+for i,v in next, Client.Tasks do
+	hookfunction(v, function() return end)
+end
 
 local OldNameCall = nil
 OldNameCall = hookmetamethod(game, "__namecall", function(...)
@@ -229,7 +226,7 @@ Client.AutoEscape = function()
 end
 
 Client.OpenAllDoors = function()
-    local Table = getgc(true)
+    local Table = Client.Doors
     for i,v in next, Table do
         if type(v) == "table" and rawget(v, "CloseFun") and rawget(v, "Model") and rawget(v, "State") then
             Client.Door(v)
@@ -286,17 +283,11 @@ Client.KillDropNPC = function()
     end
 end
 
-local Sethiddenproperty = function(A, B, C)
-    setthreadcontext(2)
-    sethiddenproperty(A, B, C)
-    setthreadcontext(8)
-end
-
 Client.Yes = function(v)
     if v:IsA("TouchTransmitter") then
         if (table.find(Names, v.Parent.Name) or table.find(Names, v.Parent.Parent.Name) or table.find(Names, v.Parent.Parent.Parent.Name)) then
             if v.Parent:IsA("BasePart") and v.Parent.CanTouch then
-                Sethiddenproperty(v.Parent, "CanTouch", false)
+                sethiddenproperty(v.Parent, "CanTouch", false)
             end
         end
     end
@@ -806,14 +797,6 @@ Nig:CreateButton({
 RunService.Stepped:Connect(function()
     local A, B = pcall(function()
         if Player.Character:FindFirstChild("Humanoid") then
-            local Humanoid = Player.Character:FindFirstChildWhichIsA("Humanoid")
-            if Client.EditCar() and Client.EditCar().Type == "Heli" and FastHei then
-                if Client.EditCar().Velocity then
-                    Client.EditCar().Velocity.Velocity = Client.EditCar().Velocity.Velocity * HeliSpeed
-                end
-            end
-        end
-        if Player.Character:FindFirstChild("Humanoid") then
             Player.Character.Humanoid.WalkSpeed = (DWalkSpeed and tonumber(Client.WalkSpeed)) or 25
             Player.Character.Humanoid.JumpPower = (DJumpPower and tonumber(Client.JumpPower)) or 50
         end
@@ -846,9 +829,6 @@ RunService.Stepped:Connect(function()
         end
         if tick() - MasterTicks.RawSetTick >= 1 then
             MasterTicks.RawSetTick = tick()
-            if PunchGuilty and Client.Settings.Time.PunchGuilty ~= 0 then
-                rawset(Client.Settings.Time, "PunchGuilty", 0)
-            end
             if NoTazeStun and Client.Settings.Time.Stunned ~= 0 then
                 rawset(Client.Settings.Time, "Stunned", 0)
             end
@@ -894,10 +874,11 @@ RunService.Stepped:Connect(function()
             if OpenAllDoorsdoor then
                 Client.OpenAllDoors()
             end
-            if CollectAirDropsForMe then
-                Client.AirDropCollect()
+        end
+        if Client.EditCar() and Client.EditCar().Type == "Heli" and FastHei then
+            if Client.EditCar().Velocity then
+                Client.EditCar().Velocity.Velocity = Client.EditCar().Velocity.Velocity * HeliSpeed
             end
-            
         end
     end)
     if not A then
