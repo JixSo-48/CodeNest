@@ -75,8 +75,6 @@ function CodeNest.ServerHop()
         Method = "GET",
     })
     if not Servers then return end
-    ServerData = Global.HttpService.JSONDecode(Global.HttpService, Servers.Body)
-    if not ServerData then return end
     repeat wait()
         ServerData = Global.HttpService.JSONDecode(Global.HttpService, Servers.Body)
     until ServerData
