@@ -1,3 +1,6 @@
+if not game.PlaceId == 606849621 then
+    return
+end
 if not game.Loaded then
     game.Loaded:Wait()
     task.wait(3)
@@ -21,12 +24,12 @@ local Camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
 local Cursed = 0
 local Client = {
-	TagUtils = require(ReplicatedStorage.Tag.TagUtils),
-	ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
-	Gun = require(ReplicatedStorage.Game.Item.Gun),
-	ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
+    TagUtils = require(ReplicatedStorage.Tag.TagUtils),
+    ActionButtonService = require(ReplicatedStorage.ActionButton.ActionButtonService),
+    Gun = require(ReplicatedStorage.Game.Item.Gun),
+    ItemSystem = require(ReplicatedStorage.Game.ItemSystem.ItemSystem),
     UI = require(ReplicatedStorage.Module.UI),
-	Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))(),
+    Main = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/Extras/Main", true))(),
     Sniper = {
         Local = true,
         IgnoreList = {},
@@ -35,7 +38,7 @@ local Client = {
         __ClassName = "Sniper",
     },
     List = {
-        "Guest", 
+        "Guest",
         "Member"
     }
 }
@@ -101,8 +104,8 @@ Client.IsUnderRoof = function(P)
     end
     if Raycast then
         return true
-	else
-		return false
+    else
+        return false
     end
     return false
 end
@@ -117,18 +120,18 @@ Client.Arrest = function(v)
 end
 
 Client.GetClosestVehicle = function()
-	local Target = nil
-	local Huge = math.huge
-	for _, v in next, Workspace.Vehicles:GetChildren() do
-		if v:IsA('Model') then
-			local Mag = Client.Main.Mag(Player.Character.PrimaryPart, v.PrimaryPart)
-			if Mag < Huge then
-				Target = v
-				Huge = Mag
-			end
-		end
-	end
-	if Target then return Target end
+    local Target = nil
+    local Huge = math.huge
+    for _, v in next, Workspace.Vehicles:GetChildren() do
+        if v:IsA('Model') then
+            local Mag = Client.Main.Mag(Player.Character.PrimaryPart, v.PrimaryPart)
+            if Mag < Huge then
+                Target = v
+                Huge = Mag
+            end
+        end
+    end
+    if Target then return Target end
 end
 
 Client.CreatePath = function(Model, Position, Table)
@@ -198,7 +201,7 @@ Client.AutoArrest = function()
     for i=1, 20 do wait()
         Player.Character:MoveTo(v.Character.Humanoid.RootPart.Position)
     end
-    repeat 
+    repeat
         local Equip = Client.ItemSystem.GetLocalEquipped()
         if not Equip and Player.Folder:FindFirstChild("Handcuffs") and Player.Folder.Handcuffs:FindFirstChild("InventoryEquipRemote") then
             Player.Folder.Handcuffs.InventoryEquipRemote:FireServer(true)
