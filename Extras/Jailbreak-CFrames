@@ -1,0 +1,60 @@
+local Robs = {
+    Bank2 = {
+        ["02Basement"] = {
+            "02Basement",
+            CFrames = {
+                Vector3.new(-635, 20, -5995),
+                Vector3.new(-648, 20, -5994),
+                Vector3.new(-601, 10, -6010),
+                Vector3.new(-584, 3, -5966),
+                Vector3.new(-607, -5, -5959),
+                Vector3.new(-632, -5, -5993),
+                Vector3.new(-635, -5, -5965),
+                Vector3.new(-676, -5, -5947),
+            },
+        },
+        ["08Deductions"] = {
+            "08Deductions",
+            CFrames = {
+                Vector3.new(-629, 20, -5998),
+                Vector3.new(-589, 2, -6015),
+                Vector3.new(-565, 2, -5964),
+                Vector3.new(-617, 2, -5967),
+                Vector3.new(-637, 3, -5954),
+            }
+        },
+        ["06TheBlueRoom"] = {
+            "06TheBlueRoom",
+            CFrames = {
+                Vector3.new(-631, 20, -5997),
+                Vector3.new(-629, 3, -5999),
+                Vector3.new(-729, 3, -5955)
+            }
+        },
+        ["09Presidential"] = {
+            "09Presidential",
+            CFrames = {
+                Vector3.new(-648, 20, -5994),
+                Vector3.new(-631, 20, -5997),
+                Vector3.new(-631, -7, -5997), 
+                Vector3.new(-603, -6, -6008),
+                Vector3.new(-574, -6, -5941),
+                Vector3.new(-614, -6, -5922),
+                Vector3.new(-631, -6, -5963)
+            }
+
+        }
+    },
+    Bank1 = {
+        ["04Remastered"] = {
+            "04Remastered",
+            CFrames = {
+                Vector3.new(41, 19, 927),
+                Vector3.new(102, 1, 913),
+                Vector3.new(96, 1, 878),
+                Vector3.new(20, 1, 888)
+            },
+        },
+    },
+}
+return Robs
