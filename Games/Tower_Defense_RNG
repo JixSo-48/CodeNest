@@ -20,6 +20,7 @@ local Client = {
     RollServiceClient = require(ReplicatedStorage.Shared.Services.RollService.RollServiceClient),
     BaseServiceClient = require(ReplicatedStorage.Shared.Services.BaseService.BaseServiceClient),
     AuraServiceClient =  require(ReplicatedStorage.Shared.Services.AuraService.AuraServiceClient),
+    DailyRewardsServiceClient = require(ReplicatedStorage.Shared.Services.DailyRewardsService.DailyRewardsServiceClient),
     RollRemote = ReplicatedStorage._NetworkServiceContainer.RollService,
     TickMaster = {
         Tick1 = tick(),
@@ -71,12 +72,15 @@ Client.GetMap = function()
 end
 
 Client.TraitRoll = function()
-    print(Client.GetMap())
     for i,v in next, Client.GetMap().Items:GetChildren() do
         if v:GetAttribute("uniqueItemId") then
             ReplicatedStorage:WaitForChild("_NetworkServiceContainer"):WaitForChild("RollService"):FireServer("attemptTraitRoll", v:GetAttribute("uniqueItemId"))
         end
     end
+end
+
+Client.ClaimDaily = function()
+    Client.DailyRewardsServiceClient:claim()
 end
 
 Client.Disconnect(Player.Idled)
@@ -124,6 +128,14 @@ Misc2:CreateToggle({Name = "Auto Roll Tower Traits";Flag = "dasduiasdoll";Defaul
     CallbackOnCreation = true;
 })
 
+Misc2:CreateToggle({Name = "Claim Daily";Flag = "dassssduiasdoll";Default = false;
+    Callback = function(Value)
+        DailyClaim = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
 
 Misc2:CreateToggle({Name = "upgradeHealth";Flag = "upgradeHealths";Default = false;
     Callback = function(Value)
@@ -204,22 +216,23 @@ local Connection = RunService.RenderStepped:Connect(function()
             if RollTraits then
                 Client.TraitRoll()
             end
-        end
-        if AutoCollect then
-            for i,v in next, Workspace:GetChildren() do
-                if v:FindFirstChild("Root") and v:FindFirstChildWhichIsA("TouchTransmitter", true) then wait()
-                    v.Root.CFrame = Player.Character.Humanoid.RootPart.CFrame
-                    firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 0)
-                    firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 1)
+            if AutoCollect then
+                for i,v in next, Workspace:GetChildren() do
+                    if v:FindFirstChild("Root") and v:FindFirstChildWhichIsA("TouchTransmitter", true) then wait()
+                        v.Root.CFrame = Player.Character.Humanoid.RootPart.CFrame
+                        firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 0)
+                        firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 1)
+                    end
                 end
+            end
+            if DailyClaim then
+                Client.ClaimDaily()
             end
         end
         if tick() - Client.TickMaster.NoTick >= 0 then
         end
     end)
 end)
-
-
 
 Destroy2:CreateButton({
     Name = "Destroy?"; -- required: name of element
