@@ -201,22 +201,27 @@ local Connection = RunService.RenderStepped:Connect(function()
         end
         if tick() - Client.TickMaster.Tick5 >= 5 then
             Client.TickMaster.Tick5 = tick()
-            if AutoCollect then
-                for i,v in next, Workspace:GetChildren() do
-                    if v:FindFirstChild("Root") then
-                        firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 0)
-                        firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 1)
-                    end
-                end
-            end
             if RollTraits then
                 Client.TraitRoll()
             end
+        end
+        if AutoCollect then
+            local OldCFrame = Player.Character:GetModelCFrame()
+            for i,v in next, Workspace:GetChildren() do
+                if v:FindFirstChild("Root") then wait()
+                    Player.Character.Humanoid.RootPart.CFrame = v.Root.CFrame
+                    firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 0)
+                    firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 1)
+                end
+            end
+            Player.Character.Humanoid.RootPart.CFrame = OldCFrame
         end
         if tick() - Client.TickMaster.NoTick >= 0 then
         end
     end)
 end)
+
+
 
 Destroy2:CreateButton({
     Name = "Destroy?"; -- required: name of element
