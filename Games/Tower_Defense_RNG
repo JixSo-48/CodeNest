@@ -145,6 +145,7 @@ Misc2:CreateToggle({Name = "upgrade All Aura";Flag = "s";Default = false;
 local Connection = RunService.RenderStepped:Connect(function()
     local A, B = pcall(function()
         if tick() - Client.TickMaster.Tick1 >= 1 then
+            Client.TickMaster.Tick1 = tick()
             if upgradeAll then
                 Client.upgradeAll()
             end
@@ -162,6 +163,7 @@ local Connection = RunService.RenderStepped:Connect(function()
             end
         end
         if tick() - Client.TickMaster.Tick5 >= 5 then
+            Client.TickMaster.Tick5 = tick()
             if AutoCollect then
                 for i,v in next, Workspace:GetChildren() do
                     if v:FindFirstChild("Root") then
