@@ -1,0 +1,187 @@
+math.randomseed(tick())
+local Services = setmetatable({}, {__index = function(Self, Index)
+    return game:GetService(Index)
+end})
+local wait = task.wait
+local spawn = task.spawn
+local ReplicatedStorage = Services.ReplicatedStorage
+local Players = Services.Players
+local RunService = Services.RunService
+local Workspace = Services.Workspace
+local CoreGui = Services.CoreGui
+local Camera = Workspace.CurrentCamera
+local Player = Players.LocalPlayer
+
+local Client = {
+    Rebirth = require(ReplicatedStorage.Shared.Services.RebirthService.RebithServiceClient),
+    SettingsServiceClient = require(ReplicatedStorage.Shared.Services.SettingsService.SettingsServiceClient),
+    NetworkServiceClient = require(ReplicatedStorage.Shared.Services.NetworkService.NetworkServiceClient),
+    RollServiceClient = require(ReplicatedStorage.Shared.Services.RollService.RollServiceClient),
+    BaseServiceClient = require(ReplicatedStorage.Shared.Services.BaseService.BaseServiceClient),
+    AuraServiceClient =  require(ReplicatedStorage.Shared.Services.AuraService.AuraServiceClient),
+    RollRemote = ReplicatedStorage._NetworkServiceContainer.RollService,
+    TickMaster = {
+        Tick1 = tick(),
+        Tick5 = tick(),
+        NoTick = tick(),
+    },
+}
+Client.AutoRebirth = function()
+    Client.Rebirth:attemptRebirth()
+end
+
+Client.Roll = function()
+    Client.RollServiceClient:attemptRoll()
+end
+
+Client.FastRoll = function()
+    setconstant(Client.RollServiceClient.roll, 1, math.huge)
+end
+
+Client.upgradeLuckyRollLevel = function()
+    Client.RollServiceClient:upgradeLuckyRollLevel()
+end
+
+Client.upgradeLuckLevel = function()
+    Client.RollServiceClient:upgradeLuckLevel()
+end
+
+Client.upgradeHealth = function()
+    Client.BaseServiceClient:upgradeHealth()
+end
+Client.upgradeAll = function()
+    Client.AuraServiceClient:upgradeAll()
+    Client.AuraServiceClient:doneUpgradingAll()
+end
+
+local Atlas = loadstring(game:HttpGet("https://raw.githubusercontent.com/JixSo-48/CodeNest/refs/heads/main/UI/Atlas_UI_Library"))()
+local UI = Atlas.new({
+    Name = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name;
+    ConfigFolder = "Tower Defense RNG";
+    Credit = "DekuDimz Script developer | UI Made By RoadToGlory#9879"; -- text to appear if player presses the "i" button on their UI (optional)
+    Color = Color3.fromRGB(255,0,0); -- theme color for UI (required)
+    Bind = "Delete"; -- keybind for toggling the UI, must be a valid KeyCode name
+    -- Atlas Loader:
+    UseLoader = false; -- whether to use Atlas Loader or not, if set to false than CheckKey and Discord are ignored
+    FullName = "CodeNest"; -- works if UseLoader is set to true, can be same as Name argument, shown on loader frame
+    CheckKey = function(inputtedKey) -- works if UseLoader is set to true, where inputtedKey is the key inputted by the player
+        return true
+    end;
+    Discord = ""; -- works if UseLoader is set to true, will be copied to clipboard if player presses "Copy Invite" button
+})
+
+local Misc = UI:CreatePage("Misc")
+local Misc2 = Misc:CreateSection("System")
+local Destroy = UI:CreatePage("Destroy Gui System")
+local Destroy2 = Destroy:CreateSection("Destroy")
+
+Misc2:CreateToggle({Name = "Super Fast Rolling";Flag = "Super Fast Autdo Roll";Default = false;
+    Callback = function(Value)
+        if Value then
+            setconstant(Client.RollServiceClient.roll, 1, math.huge)
+        else
+            setconstant(Client.RollServiceClient.roll, 1, 2.5)
+        end
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({Name = "upgradeHealth";Flag = "upgradeHealths";Default = false;
+    Callback = function(Value)
+        upgradeHealth = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({Name = "upgradeLuckLevel";Flag = "upgradeLuckLevels";Default = false;
+    Callback = function(Value)
+        upgradeLuckLevel = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({Name = "upgradeLuckyRollLevel";Flag = "upgradeLuckyRollLevels";Default = false;
+    Callback = function(Value)
+        upgradeLuckyRollLevel = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({Name = "AutoRebirth";Flag = "sAutoRebirth";Default = false;
+    Callback = function(Value)
+        AutoRebirth = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({Name = "AutoCollect";Flag = "AutoCollect";Default = false;
+    Callback = function(Value)
+        AutoCollect = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+Misc2:CreateToggle({Name = "upgrade All Aura";Flag = "s";Default = false;
+    Callback = function(Value)
+        upgradeAll = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
+local Connection = RunService.RenderStepped:Connect(function()
+    local A, B = pcall(function()
+        if tick() - Client.TickMaster.Tick1 >= 1 then
+            if upgradeAll then
+                Client.upgradeAll()
+            end
+            if upgradeHealth then
+                Client.upgradeHealth()
+            end
+            if upgradeLuckLevel then
+                Client.upgradeLuckLevel()
+            end
+            if upgradeLuckyRollLevel then
+                Client.upgradeLuckyRollLevel()
+            end
+            if AutoRebirth then
+                Client.AutoRebirth()
+            end
+        end
+        if tick() - Client.TickMaster.Tick5 >= 5 then
+            if AutoCollect then
+                for i,v in next, Workspace:GetChildren() do
+                    if v:FindFirstChild("Root") then
+                        firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 0)
+                        firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 1)
+                    end
+                end
+            end
+        end
+        if tick() - Client.TickMaster.NoTick >= 0 then
+        end
+    end)
+end)
+
+Destroy2:CreateButton({
+    Name = "Destroy?"; -- required: name of element
+    Callback = function()  -- required: function to be called when button is pressed
+        UI:Destroy()
+        Connection:Disconnect()
+        Connection = nil
+        setconstant(Client.RollServiceClient.roll, 1, 2.5)
+    end
+})
