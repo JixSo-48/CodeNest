@@ -206,15 +206,13 @@ local Connection = RunService.RenderStepped:Connect(function()
             end
         end
         if AutoCollect then
-            local OldCFrame = Player.Character:GetModelCFrame()
             for i,v in next, Workspace:GetChildren() do
-                if v:FindFirstChild("Root") then wait()
-                    Player.Character.Humanoid.RootPart.CFrame = v.Root.CFrame
+                if v:FindFirstChild("Root") and v:FindFirstChildWhichIsA("TouchTransmitter", true) then wait()
+                    v.Root.CFrame = Player.Character.Humanoid.RootPart.CFrame
                     firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 0)
                     firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 1)
                 end
             end
-            Player.Character.Humanoid.RootPart.CFrame = OldCFrame
         end
         if tick() - Client.TickMaster.NoTick >= 0 then
         end
