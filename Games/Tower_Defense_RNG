@@ -62,6 +62,22 @@ Client.upgradeAll = function()
     Client.AuraServiceClient:doneUpgradingAll()
 end
 
+Client.GetMap = function()
+    for i,v in next, workspace._Bases:GetChildren() do
+        if v:GetAttribute("Owner") == Player.Name then
+            return v
+        end
+    end
+end
+
+Client.TraitRoll = function()
+    print(Client.GetMap())
+    for i,v in next, Client.GetMap().Items:GetChildren() do
+        if v:GetAttribute("uniqueItemId") then
+            ReplicatedStorage:WaitForChild("_NetworkServiceContainer"):WaitForChild("RollService"):FireServer("attemptTraitRoll", v:GetAttribute("uniqueItemId"))
+        end
+    end
+end
 
 Client.Disconnect(Player.Idled)
 Client.Disconnect(ScriptContext.Error)
@@ -98,6 +114,16 @@ Misc2:CreateToggle({Name = "Super Fast Rolling";Flag = "Super Fast Autdo Roll";D
     WarningIcon = 12345;
     CallbackOnCreation = true;
 })
+
+Misc2:CreateToggle({Name = "Auto Roll Tower Traits";Flag = "dasduiasdoll";Default = false;
+    Callback = function(Value)
+        RollTraits = Value
+    end;
+    Warning = "";
+    WarningIcon = 12345;
+    CallbackOnCreation = true;
+})
+
 
 Misc2:CreateToggle({Name = "upgradeHealth";Flag = "upgradeHealths";Default = false;
     Callback = function(Value)
@@ -182,6 +208,9 @@ local Connection = RunService.RenderStepped:Connect(function()
                         firetouchinterest(Player.Character.Humanoid.RootPart, v.Root, 1)
                     end
                 end
+            end
+            if RollTraits then
+                Client.TraitRoll()
             end
         end
         if tick() - Client.TickMaster.NoTick >= 0 then
